@@ -1,26 +1,10 @@
+#!/usr/bin/env ruby
+
 require 'JSON'
 require 'time'
 require 'yaml'
 
-# screw you stack overflow
-#def ranges_overlap?(a, b)
-  #a.include?(b.begin) || b.include?(a.begin)
-#end
 
-## this doesn't seem to handle exclude_end
-#def merge_ranges(a, b)
-  #[a.begin, b.begin].min..[a.end, b.end].max
-#end
-
-#def merge_overlapping_ranges(ranges)
-  #ranges.sort_by(&:begin).inject([]) do |ranges, range|
-    #if !ranges.empty? && ranges_overlap?(ranges.last, range)
-      #ranges[0...-1] + [merge_ranges(ranges.last, range)]
-    #else
-      #ranges + [range]
-    #end
-  #end
-#end
 
 def time_floor t,mins
   Time.at(t.to_i/(mins*60)*(mins*60))
@@ -68,35 +52,68 @@ class Range
   alias_method :&, :intersection
 end
 
+def timeparse time
+  tt = Time.rfc2822(time) rescue tt = Time.iso8601(time) rescue tt = Time.strptime(time, "%Y-%m-%d %T %z")
+  raise "Invalid time #{time}" if tt.nil?
+  time_floor(tt, 30);   # magic value
+end
+
+
 # algorithm: round all times down to the nearest 15 mins, add 45 minutes to make a range, merge ranges
-json = JSON.parse File.read 'commits.json'
-commits = json['commits']
 
-commits = commits.map { |r| r['date'] = time_floor(Time.rfc2822(r['date']), 30); r }
-commits = commits.map { |r| r['range'] = (r['date']-30*60)..(r['date'] + 30*60); r }
+results = []
+Dir['*.json'].each do |file|
+  json = JSON.parse File.read(file)
+  results.concat json.reject { |x| x == {} }
+end
 
-meetings = json['uncommitted'].map { |v| t=Time.rfc2822(v['date']); v['range']=t..(t+v['duration'].to_i*3600); v }
+# click everything to the nearest half hour
+results.each { |r|
+  r['date'] = timeparse(r['date'])             # magic value
+  r['end'] = timeparse(r['end']) + 30*60 if r['end']   # magic value
+}
 
-ranges = commits.map { |r| r['range'] } + meetings.map { |m| m['range'] }
+# then try to establish a range
+results.each { |r|
+  if r['end']
+    r['range'] = r['date']..r['end']
+  elsif r['duration']
+    r['range'] = r['date']..(r['date'] + 3600*r['duration'].to_i)
+  else
+    # just assume it took 1/2 hour
+    r['range'] = r['date']..(r['date'] + 30*60);  # magic value -- assume task duration of 30 minutes
+  end
+}
 
-merged = merge_ranges ranges
-#puts merged.map { |v| (v.end - v.begin).round }.inspect
+ranges = results.map { |r| r['range'] }
+puts "BEFORE:"
+puts ranges.sort_by { |r| r.min }.join("\n")
+merged = merge_ranges(ranges)
+puts "MERGED:"
+puts merged.sort_by { |r| r.min }.join("\n")
+
+# puts merged.map { |v| (v.end - v.begin)/60}.inspect
+#
 #merged = merge_ranges merged.map { |r| time_floor(r.first, 30)..(time_floor(r.last,30)+30) }
 #puts merged.map { |v| (v.end - v.begin).round }.inspect
 
 total = merged.reduce(0) { |a,v| a += (v.end - v.begin).round }
 
-merged.each { |r| puts "#{r.begin.strftime '%a'},#{r.begin.strftime '%m-%d'},#{r.begin.strftime '%H:%M'},#{r.end.strftime '%H:%M'},#{(r.end - r.begin) / 3600}" }
+merged.each { |r|
+  puts "#{r.begin.strftime '%a'},#{r.begin.strftime '%m-%d'},#{r.begin.strftime '%H:%M'},#{r.end.strftime '%H:%M'},#{(r.end - r.begin) / 3600}"
+}
 
-puts "total commits=#{commits.count}, time blocks=#{merged.count}, hours=#{total/3600}"
+puts
+puts "total results=#{results.count}, time blocks=#{merged.count}, hours=#{total/3600.0}"
 
-seq_start = Time.parse('30-12-2012')
-seq_end = Time.parse('30-03-2013')
 
 
 #
 #     print calendar
 #
+
+seq_start = Time.parse('29-12-2013')
+seq_end = Time.parse('23-08-2014')
 
 total = nil
 iterate_days seq_start, seq_end do |lo,hi|
@@ -108,12 +125,15 @@ iterate_days seq_start, seq_end do |lo,hi|
     print "\n%10s" % "#{lo.month}-#{lo.day}"
   end
 
-  today = merged.reduce(0) { |a,v| n = (range & v); a += (n.end - n.begin).round }
+  today = merged.reduce(0) { |a,v|
+    n = range & v
+    a += n.end - n.begin
+  }
 
-  print "%5d" % (today / 3600)
+  print "%5.1f" % (today / 3600.0)
   total += today
 end
-print "%10d\n" % (total/3600)
+print "%10.1f\n" % (total/3600.0)
 
 
 #
@@ -124,20 +144,22 @@ def select_events range, arr
   arr.select { |o| o['range'].begin >= range.begin && o['range'].begin <= range.end }
 end
 
-iterate_days seq_start, seq_end do |lo,hi|
-  today = lo..hi
+File.open("out.csv", 'w') do |file|
+  iterate_days seq_start, seq_end do |lo,hi|
+    today = lo..hi
 
-  dow = lo.strftime '%a'
-  date = lo.strftime '%m-%d'
-  merged.each do |r|
-    time = r.begin.strftime '%H:%M'
-    dur = ([r.end, hi].min - [r.begin, lo].max) / 3600
-    this = today & r
-    if this.begin != this.end  # !this.empty?
-      events = (select_events(this,commits) + select_events(this,meetings)).sort_by { |e| e['range'].begin }
-      events.each do |e|
-        puts "#{dow},#{date},#{time},#{dur},\"#{e['comment'].gsub('"', '""')}\",\"#{e['hash'] ? '0x' + e['hash'][0..12] : e['src']}\""
-        date = dow = time = dur = ""
+    dow = lo.strftime '%a'
+    date = lo.strftime '%m-%d'
+    merged.each do |r|
+      time = r.begin.strftime '%H:%M'
+      dur = ([r.end, hi].min - [r.begin, lo].max) / 3600
+      this = today & r
+      if this.begin != this.end  # !this.empty?
+        events = select_events(this,results).sort_by { |e| e['range'].begin }
+        events.each do |e|
+          file.puts "#{dow},#{date},#{time},#{dur},\"#{e['comment'].gsub('"', '""')}\",\"#{e['hash'] ? '0x' + e['hash'][0..12] : e['src']}\""
+          date = dow = time = dur = ""
+        end
       end
     end
   end
