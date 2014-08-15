@@ -1,0 +1,15 @@
+#!/bin/sh
+
+# Note this requires Perl 5.14 or later.
+
+author=brons
+since=1-1-2014
+
+echo '{ "commits": ['
+# pipe through sed to escape double quotes in commets, wish git could do this on its own
+# (strange that perl won't accept ($1 =~ s/"\\"/rg), apparently I have to wrap it with a function rp($1)
+git --no-pager log --all --full-history --author="$author" --since="$since" --date=iso \
+    --format='{"hash":"%h", "date":"%ad", "comment":"%s"},' |
+    perl -pe 'use 5.013002; sub rp { shift =~ s/"/\\"/rg } s/"comment":"(.*)"},$/"\"comment\":\"" . rp($1) . "\"},"/e'
+echo '{}' # because trailing comma is invalid json
+echo ']}'
