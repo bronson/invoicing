@@ -130,7 +130,7 @@ results.each { |r|
 results.sort_by! { |r| r['range'].min }
 
 puts "BEFORE:"
-results.each { |r| puts "#{r['range']}: #{r['comment']}" }
+results.each { |r| puts "#{r['range']}:#{"%8s " % r['hash']} #{r['comment']}" }
 
 ranges = results.map { |r| r['range'] }
 merged = merge_ranges(ranges)
@@ -163,13 +163,14 @@ seq_start = Time.parse('16-03-2014')
 seq_end = Time.parse('23-08-2014')
 
 total = nil
+print "\n              Sun  Mon  Tue  Wed  Thu  Fri  Sat"
 iterate_days seq_start, seq_end do |lo,hi|
   range = lo..hi
 
   if lo.wday == 0
     print "%10d" % (total/3600) if total
     total = 0
-    print "\n%10s" % "#{lo.month}-#{lo.day}"
+    print "\n%10s  " % "#{lo.day} #{lo.strftime('%b')}"
   end
 
   today = merged.reduce(0) { |a,v|
