@@ -52,15 +52,24 @@ class Range
   alias_method :&, :intersection
 end
 
-$base_time = nil
-
+# click everything to the nearest half hour
 def timeparse time
   tt ||= Time.rfc2822(time) rescue nil
   tt ||= Time.iso8601(time) rescue nil
   tt ||= Time.strptime(time, "%Y-%m-%d %T %z") rescue nil
-  raise 'Need to fully specify the first time in the file' unless tt || $base_time
 
-  tt = Time.parse(time, $base_time)   # try a partial match
+  if !tt
+    if $base_time
+      # base_time has been set so try parsing a relative time
+      # todo: I should be a lot stricter about parsing invalid times
+      puts "TIME=#{time}  BASE=#{$base_time}"
+      tt = Time.parse(time, $base_time)   # try a relative time
+      tt += 86400 if $base_time && $base_time > tt
+    else
+      raise "the first time in the file must be rfc or iso: #{time}"
+    end
+  end
+
   $base_time = tt
 
   raise "Invalid time #{time}" if tt.nil?
@@ -68,19 +77,45 @@ def timeparse time
 end
 
 
-# algorithm: round all times down to the nearest 15 mins, add 45 minutes to make a range, merge ranges
-
 results = []
 Dir['*.json'].each do |file|
+  $base_time = nil
   json = JSON.parse File.read(file)
-  results.concat json.reject { |x| x == {} }
+  json.reject! { |x| x == {} }
+  json.each { |r|
+    r['date'] = timeparse(r['date'])             # magic value
+    r['end'] = timeparse(r['end']) + 30*60 if r['end']   # magic value
+  }
+  results.concat json
 end
 
-# click everything to the nearest half hour
-results.each { |r|
-  r['date'] = timeparse(r['date'])             # magic value
-  r['end'] = timeparse(r['end']) + 30*60 if r['end']   # magic value
-}
+
+Dir['*.lines'].each do |file|
+  $base_time = nil
+  File.open(file).each do |line|
+    next if line =~ /^\s*$/ # blank lines
+    next if line =~ /^\s*#/ # comments
+
+    unless $base_time
+      puts "parsing #{line}"
+      $base_time = timeparse(line)
+      next
+    end
+
+    # todo: should probably choose a line format that more clearly identifies errors
+    m = line.match(/^\s*([^-]+)-(.*):([^0-9].*)$/)
+    raise "can't match line: #{line}" unless m
+
+    obj = {
+      'date' => timeparse(m[1]),
+      'end' => timeparse(m[2]),
+      'comment' => m[3]
+    }
+    results << obj
+    puts obj.inspect
+  end
+end
+
 
 # then try to establish a range
 results.each { |r|
