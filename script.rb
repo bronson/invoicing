@@ -244,3 +244,37 @@ File.open("out.csv", 'w') do |file|
     end
   end
 end
+
+
+File.open("sheet.csv", 'w') do |file|
+  iterate_days seq_start, seq_end do |lo,hi|
+    today = lo..hi
+
+    dow = lo.strftime '%a'
+    date = lo.strftime '%b %d'
+    file.print "#{dow},#{date},"
+
+    i = 0
+    merged.each.with_index do |r|
+      start = [r.begin, lo].max.strftime '%H:%M'
+      stop = [r.end, hi].min.strftime '%H:%M'
+      dur = ([r.end, hi].min - [r.begin, lo].max) / 3600
+
+      this = today & r
+      if this.begin != this.end  # !this.empty?
+        file.print "\n,," unless i == 0
+        file.print "#{start},#{stop},#{dur}"
+
+        events = select_events(this,results).sort_by { |e| e['range'].begin }
+        comments = events.map { |e| e['comment'] }
+        file.print ",\"" + comments.map { |c| c.gsub('"', '""') }.join(", ") + "\""
+
+        i += 1
+      end
+    end
+
+    file.print "\n"
+    file.print "\n" if dow == 'Sat'
+  end
+end
+
