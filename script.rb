@@ -114,6 +114,40 @@ Dir['*.lines'].each do |file|
   end
 end
 
+seq_start = Time.parse('16-03-2014')
+seq_end = Time.parse('23-08-2014')
+
+Dir['*.emails'].each do |name|
+  File.open(name) do |file|
+    loop do
+      line = file.gets until file.eof? || line =~ /^From: Scott Bronson/
+      break if file.eof?
+
+      line = file.gets
+      next unless line =~ /^Subject: (.*)$/
+      comment = $1
+
+      line = file.gets
+      raise "wanted Date: not #{line}" unless line =~ /^Date: (.*)$/
+      date = time_floor(Time.parse($1), 30)
+
+      next unless date >= seq_start
+
+      line = file.gets
+      raise "wanted To: not #{line}" unless line =~ /^To: (.*)$/ || line =~ /^Cc: (.*)$/
+      to = $1
+
+      obj = {
+        'date' => date,
+        'comment' => comment,
+        'to' => to
+      }
+      results << obj
+    end
+    puts "done!"
+  end
+end
+
 
 # then try to establish a range
 results.each { |r|
@@ -130,7 +164,7 @@ results.each { |r|
 results.sort_by! { |r| r['range'].min }
 
 puts "BEFORE:"
-results.each { |r| puts "#{r['range']}:#{"%8s " % r['hash']} #{r['comment']}" }
+results.each { |r| puts "#{r['range']}:#{"%8s " % (r['hash'] || (r['to'] && r['to'][0..7]))} #{r['comment']}" }
 
 ranges = results.map { |r| r['range'] }
 merged = merge_ranges(ranges)
@@ -158,9 +192,6 @@ puts "total results=#{results.count}, time blocks=#{merged.count}, hours=#{total
 #
 #     print calendar
 #
-
-seq_start = Time.parse('16-03-2014')
-seq_end = Time.parse('23-08-2014')
 
 total = nil
 print "\n              Sun  Mon  Tue  Wed  Thu  Fri  Sat"
