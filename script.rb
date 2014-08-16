@@ -62,7 +62,6 @@ def timeparse time
     if $base_time
       # base_time has been set so try parsing a relative time
       # todo: I should be a lot stricter about parsing invalid times
-      puts "TIME=#{time}  BASE=#{$base_time}"
       tt = Time.parse(time, $base_time)   # try a relative time
       tt += 86400 if $base_time && $base_time > tt
     else
@@ -85,6 +84,7 @@ Dir['*.json'].each do |file|
   json.each { |r|
     r['date'] = timeparse(r['date'])             # magic value
     r['end'] = timeparse(r['end']) + 30*60 if r['end']   # magic value
+    r['comment'].strip!
   }
   results.concat json
 end
@@ -97,7 +97,6 @@ Dir['*.lines'].each do |file|
     next if line =~ /^\s*#/ # comments
 
     unless $base_time
-      puts "parsing #{line}"
       $base_time = timeparse(line)
       next
     end
@@ -109,10 +108,9 @@ Dir['*.lines'].each do |file|
     obj = {
       'date' => timeparse(m[1]),
       'end' => timeparse(m[2]),
-      'comment' => m[3]
+      'comment' => m[3].strip
     }
     results << obj
-    puts obj.inspect
   end
 end
 
@@ -129,10 +127,14 @@ results.each { |r|
   end
 }
 
-ranges = results.map { |r| r['range'] }
+results.sort_by! { |r| r['range'].min }
+
 puts "BEFORE:"
-puts ranges.sort_by { |r| r.min }.join("\n")
+results.each { |r| puts "#{r['range']}: #{r['comment']}" }
+
+ranges = results.map { |r| r['range'] }
 merged = merge_ranges(ranges)
+
 puts "\nMERGED:"
 puts merged.sort_by { |r| r.min }.join("\n")
 
@@ -157,7 +159,7 @@ puts "total results=#{results.count}, time blocks=#{merged.count}, hours=#{total
 #     print calendar
 #
 
-seq_start = Time.parse('29-12-2013')
+seq_start = Time.parse('16-03-2014')
 seq_end = Time.parse('23-08-2014')
 
 total = nil
