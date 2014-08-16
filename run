@@ -1,0 +1,3 @@
+#!/bin/sh
+
+./script.rb | tee out.txt

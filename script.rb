@@ -52,8 +52,17 @@ class Range
   alias_method :&, :intersection
 end
 
+$base_time = nil
+
 def timeparse time
-  tt = Time.rfc2822(time) rescue tt = Time.iso8601(time) rescue tt = Time.strptime(time, "%Y-%m-%d %T %z")
+  tt ||= Time.rfc2822(time) rescue nil
+  tt ||= Time.iso8601(time) rescue nil
+  tt ||= Time.strptime(time, "%Y-%m-%d %T %z") rescue nil
+  raise 'Need to fully specify the first time in the file' unless tt || $base_time
+
+  tt = Time.parse(time, $base_time)   # try a partial match
+  $base_time = tt
+
   raise "Invalid time #{time}" if tt.nil?
   time_floor(tt, 30);   # magic value
 end
@@ -89,7 +98,7 @@ ranges = results.map { |r| r['range'] }
 puts "BEFORE:"
 puts ranges.sort_by { |r| r.min }.join("\n")
 merged = merge_ranges(ranges)
-puts "MERGED:"
+puts "\nMERGED:"
 puts merged.sort_by { |r| r.min }.join("\n")
 
 # puts merged.map { |v| (v.end - v.begin)/60}.inspect
@@ -99,6 +108,7 @@ puts merged.sort_by { |r| r.min }.join("\n")
 
 total = merged.reduce(0) { |a,v| a += (v.end - v.begin).round }
 
+puts "\nRANGES:"
 merged.each { |r|
   puts "#{r.begin.strftime '%a'},#{r.begin.strftime '%m-%d'},#{r.begin.strftime '%H:%M'},#{r.end.strftime '%H:%M'},#{(r.end - r.begin) / 3600}"
 }
@@ -151,9 +161,10 @@ File.open("out.csv", 'w') do |file|
     dow = lo.strftime '%a'
     date = lo.strftime '%m-%d'
     merged.each do |r|
-      time = r.begin.strftime '%H:%M'
+      time = [r.begin, lo].max.strftime '%H:%M'
       dur = ([r.end, hi].min - [r.begin, lo].max) / 3600
       this = today & r
+
       if this.begin != this.end  # !this.empty?
         events = select_events(this,results).sort_by { |e| e['range'].begin }
         events.each do |e|
