@@ -144,7 +144,6 @@ Dir['*.emails'].each do |name|
       }
       results << obj
     end
-    puts "done!"
   end
 end
 
@@ -163,14 +162,14 @@ results.each { |r|
 
 results.sort_by! { |r| r['range'].min }
 
-puts "BEFORE:"
+puts "EVENTS:"
 results.each { |r| puts "#{r['range']}:#{"%8s " % (r['hash'] || (r['to'] && r['to'][0..7]))} #{r['comment']}" }
 
 ranges = results.map { |r| r['range'] }
 merged = merge_ranges(ranges)
 
-puts "\nMERGED:"
-puts merged.sort_by { |r| r.min }.join("\n")
+# puts "\nMERGED:"
+# puts merged.sort_by { |r| r.min }.join("\n")
 
 # puts merged.map { |v| (v.end - v.begin)/60}.inspect
 #
@@ -181,7 +180,8 @@ total = merged.reduce(0) { |a,v| a += (v.end - v.begin).round }
 
 puts "\nRANGES:"
 merged.each { |r|
-  puts "#{r.begin.strftime '%a'},#{r.begin.strftime '%m-%d'},#{r.begin.strftime '%H:%M'},#{r.end.strftime '%H:%M'},#{(r.end - r.begin) / 3600}"
+  puts "#{r.begin.strftime '%a'} #{r.begin.strftime '%m-%d'}: #{r.begin.strftime '%H:%M'}-#{r.end.strftime '%H:%M'} #{(r.end - r.begin) / 3600}" +
+    "#{ '+' if r.begin.day != r.end.day }#{ ' !' if r.end - r.begin > 8*60*60 }"
 }
 
 puts
