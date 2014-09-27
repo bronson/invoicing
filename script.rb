@@ -230,15 +230,17 @@ File.open("out.csv", 'w') do |file|
     dow = lo.strftime '%a'
     date = lo.strftime '%m-%d'
     merged.each do |r|
-      time = [r.begin, lo].max.strftime '%H:%M'
+      beg = [r.begin, lo].max
+      time = beg.strftime '%H:%M'
       dur = ([r.end, hi].min - [r.begin, lo].max) / 3600
+      fin = (beg + dur*3600).strftime '%H:%M'
       this = today & r
 
       if this.begin != this.end  # !this.empty?
         events = select_events(this,results).sort_by { |e| e['range'].begin }
         events.each do |e|
-          file.puts "#{dow},#{date},#{time},#{dur},\"#{e['comment'].gsub('"', '""')}\",\"#{e['hash'] ? '0x' + e['hash'][0..12] : e['src']}\""
-          date = dow = time = dur = ""
+          file.puts "#{dow},#{date},#{time},#{fin},#{dur},\"#{e['comment'].gsub('"', '""')}\",\"#{e['hash'] ? '0x' + e['hash'][0..12] : e['src']}\""
+          date = dow = time = fin = dur = ""
         end
       end
     end
