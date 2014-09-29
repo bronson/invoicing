@@ -1,0 +1,26 @@
+doctype html
+html
+  head
+    title= title
+    meta name="viewport" content="width=device-width, initial-scale=1.0"
+    - stylesheets.each do |sheet|
+      link rel="stylesheet" href=sheet
+  body
+    .block-group
+
+      .metadata.block
+        .invoice Invoice 13
+        .date    Sep 28, 2014
+
+      .sender.block
+        .name     AUTHOR
+        .address  AUTHOR ADDRESS
+        .address2 AUTHOR CITY, STATE ZIP
+        / lame, impossible to have text that starts with '(': https://github.com/slim-template/slim/issues/441
+        .phone
+          |       (AREA) PHONE-NUMBER
+
+      .recipient.block
+        .name     CLIENT NAME
+        .address  CLIENT ADDRESS
+        .address2 CLIENT CITY, STATE ZIP
