@@ -1,0 +1,17 @@
+GIT
+  remote: https://github.com/Thinkei/wkhtmltopdf-heroku
+  revision: f670e90c78b8e58c4133f6183686ca7dfacf10c3
+  specs:
+    wkhtmltopdf-heroku (1.0.0)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    pdfkit (0.6.2)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  pdfkit
+  wkhtmltopdf-heroku!
