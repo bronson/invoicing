@@ -124,7 +124,48 @@ class Event
 end
 
 
-events = []
+class EventRange
+  attr_reader :range, :events
+  @@all = []
+
+  def initialize event
+    @range = event.range
+    @events = [event]
+  end
+
+  def add event
+    raise "events out of order: #{event.range.begin} < #{@range.begin}" if event.range.begin < @range.begin
+    @range = @range.begin...[@range.end, event.range.end].max
+    @events << event
+  end
+
+  def end
+    range.end
+  end
+
+  def begin
+    range.begin
+  end
+
+  def self.all
+    @@all
+  end
+
+  def self.merge_events
+    prev = nil
+    Event.all.each do |event|
+      if prev && prev.range.end >= event.range.begin - 3600
+        # if events are separated by an hour or less, merge them
+        prev.add(event)
+      else
+        # otherwise start a new range
+        prev = EventRange.new(event)
+        @@all << prev
+      end
+    end
+  end
+end
+
 
 Dir['*.json'].each do |file|
   $base_time = nil
@@ -204,19 +245,17 @@ Event.sort
 puts "EVENTS:"
 Event.all.each { |r| puts "#{r.range}:#{"%8s " % (r.hash || (r.to && r.to[0..7]))} #{r.comment}" }
 
-ranges = Event.all.map { |r| r.range }
-merged = merge_ranges(ranges)
-
-total = merged.reduce(0) { |a,v| a += (v.end - v.begin).round }
+EventRange.merge_events
 
 puts "\nRANGES:"
-merged.each { |r|
+EventRange.all.each { |r|
   puts "#{r.begin.strftime '%a'} #{r.begin.strftime '%m-%d'}: #{r.begin.strftime '%H:%M'}-#{r.end.strftime '%H:%M'} #{(r.end - r.begin) / 3600}" +
     "#{ '+' if r.begin.day != r.end.day }#{ ' !' if r.end - r.begin > 8*60*60 }"
 }
 
 puts
-puts "total results=#{Event.all.count}, time blocks=#{merged.count}, hours=#{total/3600.0}"
+total = EventRange.all.reduce(0) { |a,v| a += (v.end - v.begin).round }
+puts "total results=#{Event.all.count}, time blocks=#{EventRange.all.count}, hours=#{total/3600.0}"
 
 
 
@@ -235,7 +274,7 @@ iterate_days seq_start, seq_end do |lo,hi|
     print "\n%10s  " % "#{lo.day} #{lo.strftime('%b')}"
   end
 
-  today = merged.reduce(0) { |a,v|
+  today = EventRange.all.reduce(0) { |a,v|
     n = range & v
     a += n.end - n.begin
   }
@@ -260,7 +299,7 @@ File.open("out.csv", 'w') do |file|
 
     dow = lo.strftime '%a'
     date = lo.strftime '%m-%d'
-    merged.each do |r|
+    EventRange.all.each do |r|
       beg = [r.begin, lo].max
       time = beg.strftime '%H:%M'
       dur = ([r.end, hi].min - [r.begin, lo].max) / 3600
@@ -280,22 +319,22 @@ end
 
 
 invoices = []
-events = Event.all.dup
+ranges = EventRange.all.dup
 File.foreach("TOTALS").with_index do |line,i|
   fields = line.split(/\s*,\s*/).map(&:strip)
   next unless fields.first =~ /^0*[1-9]/  # skip this line if it doesn't look like an invoice number
 
   invoice = Invoice.new(fields,i)
-  events_for_invoice,events = events.partition { |o|
-    intersection = o.range & invoice.range
-    !intersection.empty?
+  ranges_for_invoice,ranges = ranges.partition { |o|
+    invoice.range.cover?(o.begin)
   }
-  invoice.compute_events(events_for_invoice)
+  invoice.compute_ranges(ranges_for_invoice)
   invoices << invoice
 end
 
 
-puts "\nYou have #{events.count} uncovered events!" unless events.empty?
+count = ranges.reduce(0) { |v,o| v += o.events.size }
+puts "\nYou have #{count} uncovered events!" unless count == 0
 
 # make sure invoice numbers don't conflict
 invoices.each.with_object({}) { |a,h|

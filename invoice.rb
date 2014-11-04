@@ -1,7 +1,7 @@
 class Invoice
   attr_reader :invoice_number, :start_date, :end_date, :submit_date, :invoice_amount,
     :cleared_date, :check_amount, :check_number
-  attr_reader :range, :events, :line_number, :days
+  attr_reader :range, :event_ranges, :line_number, :days
 
   # the relative date so you don't have to specify years in the totals file
   # (intentionally different from $base_time so only used in TOTALS file)
@@ -34,9 +34,9 @@ class Invoice
     @@base_time = old_base
   end
 
-  def compute_events events
-    @events = events
-    compute_days
+  def compute_ranges ranges
+    @event_ranges = ranges
+    # compute_days
   end
 
   def parse_time str
@@ -85,54 +85,21 @@ class Invoice
     end
   end
 
-  def compute_days
-    @days = []
-    iterate_days do |today|
-      day_events = events.select { |o| !(o.range & today).empty? }
-      days << Day.new(today, day_events)
-    end
-  end
+  # def compute_days
+  #   @days = []
+  #   iterate_days do |today|
+  #     day_events = events.select { |o| !(o.range & today).empty? }
+  #     days << Day.new(today, day_events)
+  #   end
+  # end
 
 
   class Day
-    attr_reader :range, :events, :ranges
+    attr_reader :range, :event_ranges
 
     def initialize range, events
       @range = range    # time span of this day
-      @events = events
-
-      @ranges = []
-      merge_ranges
-    end
-
-    def merge_ranges
-      prev = nil
-      events.each do |event|
-        if prev && prev.range.end >= event.range.begin - 3600
-          # if events are separated by an hour or less, merge them
-          prev.add(event)
-        else
-          # otherwise start a new range
-          prev = Range.new(event)
-          @ranges << prev
-        end
-      end
-    end
-  end
-
-
-  class Range
-    attr_reader :range, :events
-
-    def initialize event
-      @range = event.range
-      @events = [event]
-    end
-
-    def add event
-      raise "events out of order: #{event.range.begin} < #{@range.begin}" if event.range.begin < @range.begin
-      @range = @range.begin...[@range.end, event.range.end].max
-      @events << event
+      @event_ranges = event_ranges
     end
   end
 end
