@@ -168,14 +168,6 @@ results.each { |r| puts "#{r['range']}:#{"%8s " % (r['hash'] || (r['to'] && r['t
 ranges = results.map { |r| r['range'] }
 merged = merge_ranges(ranges)
 
-# puts "\nMERGED:"
-# puts merged.sort_by { |r| r.min }.join("\n")
-
-# puts merged.map { |v| (v.end - v.begin)/60}.inspect
-#
-#merged = merge_ranges merged.map { |r| time_floor(r.first, 30)..(time_floor(r.last,30)+30) }
-#puts merged.map { |v| (v.end - v.begin).round }.inspect
-
 total = merged.reduce(0) { |a,v| a += (v.end - v.begin).round }
 
 puts "\nRANGES:"
@@ -248,35 +240,108 @@ File.open("out.csv", 'w') do |file|
 end
 
 
-File.open("sheet.csv", 'w') do |file|
-  iterate_days seq_start, seq_end do |lo,hi|
-    today = lo..hi
+class Invoice
+  attr_accessor :invoice_number, :start_date, :end_date, :submit_date, :invoice_amount, :cleared_date, :check_amount, :check_number
+  attr_accessor :range, :events
 
-    dow = lo.strftime '%a'
-    date = lo.strftime '%b %d'
-    file.print "#{dow},#{date},"
+  # the relative date so you don't have to specify years in the totals file
+  # (intentionally different from $base_time so only used in TOTALS file)
+  @@base_time = nil
 
-    i = 0
-    merged.each.with_index do |r|
-      start = [r.begin, lo].max.strftime '%H:%M'
-      stop = [r.end, hi].min.strftime '%H:%M'
-      dur = ([r.end, hi].min - [r.begin, lo].max) / 3600
+  def initialize fields, events
+    self.invoice_number = fields.shift.sub!(/^0+/, '')
+    self.start_date     = parse_time(fields.shift)
+    self.end_date       = parse_time(fields.shift)
+    self.submit_date    = parse_time(fields.shift)
+    self.cleared_date   = parse_time(fields.shift)
+    self.invoice_amount = parse_currency(fields.shift)
+    self.check_amount   = parse_currency(fields.shift)
 
-      this = today & r
-      if this.begin != this.end  # !this.empty?
-        file.print "\n,," unless i == 0
-        file.print "#{start},#{stop},#{dur}"
+    beg_time = Time.new(start_date.year, start_date.month, start_date.day, 0, 0, 0, start_date.utc_offset) + 6*60*60
+    end_time = Time.new(seq_end.year, seq_end.month, seq_end.day, 0, 0, 0, seq_start.utc_offset) + 6*60*60  # note: use seq_start's time zone
+    self.range = beg_time...(end_time + 86400)
 
-        events = select_events(this,results).sort_by { |e| e['range'].begin }
-        comments = events.map { |e| e['comment'] }
-        file.print ",\"" + comments.map { |c| c.gsub('"', '""') }.join(", ") + "\""
+    self.events = select_events(range,events).sort_by { |e| e['range'].begin }
+  end
 
-        i += 1
-      end
+  def parse_time str
+    if @@base_time
+      date = Time.parse(str, @@base_time)
+    else
+      raise 'First date must include full year' unless str =~ /\d\d\d\d/
+      date = Time.parsejjjG(str)
     end
 
-    file.print "\n"
-    file.print "\n" if dow == 'Sat'
+    @@base_time = date
+    date
+  end
+
+  def parse_amount str
+    raise 'invalid currency' unless str =~ /(?=.)^\$?(([1-9][0-9]{0,2}(,[0-9]{3})*)|[0-9]+)?(\.[0-9]{1,2})?$/
+    str.gsub(/\$|,/, '').to_f
+  end
+
+  def cover? date
+    range.cover?(date)
+  end
+
+  def iterate_days
+    time = range.min
+    while time < range.max
+      otime = time
+      time += 86400
+      yield Time.new(otime.year, otime.month, otime.day)...Time.new(time.year, time.month, time.day)
+    end
+  end
+
+  def slurp_events
+
+    iterate_days do |today|
+
+    end
   end
 end
 
+
+invoices = []
+File.foreach("TOTALS", 'r') do |line|
+  fields = line.split(/\s*,\s*/).map(&:strip)
+  next unless fields.first =~ /0*[1-9]/  # skip this line if it doesn't look like an invoice number
+  invoices << Invoice.new(fields, results)
+end
+
+# make sure invoice numbers don't conflict
+invoices.each.with_object({}) { |a,h|
+  raise "Duplicate invoice number: #{a.invoice_number}" if h[a.invoice_number]
+  h[a.invoice_number] = a
+}
+# make sure invoice date ranges don't overlap
+invoices.reduce { |a,b|
+  raise "Invoices #{a.invoice_number} and #{b.invoice_number} overlap!" if a.range & b.range
+  b }
+
+
+invoices.each do |invoice|
+  invoice.iterate_days do |today|
+    dow = today.min.strftime '%a'
+    date = today.min.strftime '%b %d'
+
+    merged.each do |range|
+      this = today & range
+      if this.begin != this.end  # !this.empty?
+        start = [r.begin, lo].max.strftime '%H:%M'
+        stop = [r.end, hi].min.strftime '%H:%M'
+        dur = ([r.end, hi].min - [r.begin, lo].max) / 3600
+
+        comments = events.map { |e| e['comment'] }
+      end
+    end
+  end
+end
+
+
+
+  # collect events between startdate and enddate
+  # ensure they equal the invoice amount (if it exists)
+
+  # FINALLY, do we have uninvoiced events left over?

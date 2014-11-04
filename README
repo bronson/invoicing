@@ -16,7 +16,12 @@ fields:
   comment: reminder of what you did or git commit message
   src: where a particular item came from
 
-Will I use "out"?
 
+Now, run ./script.rb
 
-Now, run the ruby script over the results.
+out.txt contains each event, a list of coalesced ranges, and a calendar.
+out.csv should probably be deleted?  sheet.csv seems to be better output.
+
+Make sure you're happy with the report.
+
+If 
