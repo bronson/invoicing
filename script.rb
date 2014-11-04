@@ -84,17 +84,58 @@ def timeparse time
 end
 
 
-results = []
+class Event
+  attr_reader :date, :end, :duration, :comment, :hash, :to, :range, :src
+  @@all = []
+
+  def initialize args
+    @date = args.delete('date')
+    @end = args.delete('end')
+    @duration = 3600*args.delete('duration').to_i if args['duration']
+    @comment = args.delete('comment')
+    @hash = args.delete('hash')
+    @to = args.delete('to')
+    @src = args.delete('src')   # TODO: looks like src is unused?
+
+    raise "Unrecognized param: #{args.inspect}" unless args.empty?
+    establish_range
+
+    @@all << self
+  end
+
+  def establish_range
+    if self.end
+      @range = self.date...self.end
+    elsif duration
+      @range = date...(date + duration)
+    else
+      # magic value -- assume task duration of 30 minutes
+      @range = date...(date + 30*60);
+    end
+  end
+
+  def self.sort
+    @@all.sort_by! { |r| r.range.min }
+  end
+
+  def self.all
+    @@all
+  end
+end
+
+
+events = []
+
 Dir['*.json'].each do |file|
   $base_time = nil
   json = JSON.parse File.read(file)
   json.reject! { |x| x == {} }
-  json.each { |r|
-    r['date'] = timeparse(r['date'])             # magic value
+  json.each do |r|
+    r['date'] = timeparse(r['date'])                     # magic value
     r['end'] = timeparse(r['end']) + 30*60 if r['end']   # magic value
     r['comment'].strip!
-  }
-  results.concat json
+    Event.new(r)
+  end
 end
 
 
@@ -118,9 +159,11 @@ Dir['*.lines'].each do |file|
       'end' => timeparse(m[2]),
       'comment' => m[3].strip
     }
-    results << obj
+
+    Event.new(obj)
   end
 end
+
 
 seq_start = Time.parse('16-03-2014')
 seq_end = Time.parse('23-08-2014')
@@ -150,30 +193,18 @@ Dir['*.emails'].each do |name|
         'comment' => comment,
         'to' => to
       }
-      results << obj
+      Event.new(obj)
     end
   end
 end
 
 
-# then try to establish a range
-results.each { |r|
-  if r['end']
-    r['range'] = r['date']...r['end']
-  elsif r['duration']
-    r['range'] = r['date']...(r['date'] + 3600*r['duration'].to_i)
-  else
-    # just assume it took 1/2 hour
-    r['range'] = r['date']...(r['date'] + 30*60);  # magic value -- assume task duration of 30 minutes
-  end
-}
-
-results.sort_by! { |r| r['range'].min }
+Event.sort
 
 puts "EVENTS:"
-results.each { |r| puts "#{r['range']}:#{"%8s " % (r['hash'] || (r['to'] && r['to'][0..7]))} #{r['comment']}" }
+Event.all.each { |r| puts "#{r.range}:#{"%8s " % (r.hash || (r.to && r.to[0..7]))} #{r.comment}" }
 
-ranges = results.map { |r| r['range'] }
+ranges = Event.all.map { |r| r.range }
 merged = merge_ranges(ranges)
 
 total = merged.reduce(0) { |a,v| a += (v.end - v.begin).round }
@@ -185,7 +216,7 @@ merged.each { |r|
 }
 
 puts
-puts "total results=#{results.count}, time blocks=#{merged.count}, hours=#{total/3600.0}"
+puts "total results=#{Event.all.count}, time blocks=#{merged.count}, hours=#{total/3600.0}"
 
 
 
@@ -220,7 +251,7 @@ print "%10.1f\n" % (total/3600.0)
 #
 
 def select_events range, arr
-  arr.select { |o| o['range'].begin >= range.begin && o['range'].begin <= range.end }
+  arr.select { |o| o.range.begin >= range.begin && o.range.begin <= range.end }
 end
 
 File.open("out.csv", 'w') do |file|
@@ -237,9 +268,9 @@ File.open("out.csv", 'w') do |file|
       this = today & r
 
       if this.begin != this.end  # !this.empty?
-        events = select_events(this,results).sort_by { |e| e['range'].begin }
+        events = select_events(this,Event.all).sort_by { |e| e.range.begin }
         events.each do |e|
-          file.puts "#{dow},#{date},#{time},#{fin},#{dur},\"#{e['comment'].gsub('"', '""')}\",\"#{e['hash'] ? '0x' + e['hash'][0..12] : e['src']}\""
+          file.puts "#{dow},#{date},#{time},#{fin},#{dur},\"#{e.comment.gsub('"', '""')}\",\"#{e.hash ? '0x' + e.hash[0..12] : e.src}\""
           date = dow = time = fin = dur = ""
         end
       end
@@ -249,14 +280,14 @@ end
 
 
 invoices = []
-events = results.dup
+events = Event.all.dup
 File.foreach("TOTALS").with_index do |line,i|
   fields = line.split(/\s*,\s*/).map(&:strip)
   next unless fields.first =~ /^0*[1-9]/  # skip this line if it doesn't look like an invoice number
 
   invoice = Invoice.new(fields,i)
   events_for_invoice,events = events.partition { |o|
-    intersection = o['range'] & invoice.range
+    intersection = o.range & invoice.range
     !intersection.empty?
   }
   invoice.compute_events(events_for_invoice)

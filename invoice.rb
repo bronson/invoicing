@@ -27,7 +27,6 @@ class Invoice
     end_time = Time.new(end_date.year, end_date.month, end_date.day,
                         0, 0, 0, start_date.utc_offset)
     @range = beg_time...(end_time + 86400)
-    @events = []
 
     # reset base_time back to start_date.  otherwise it might be the cleared date,
     # which is probably after the following invoice's start date, so we'd increment
@@ -36,7 +35,7 @@ class Invoice
   end
 
   def compute_events events
-    @events.concat(events)
+    @events = events
     compute_days
   end
 
@@ -89,7 +88,7 @@ class Invoice
   def compute_days
     @days = []
     iterate_days do |today|
-      day_events = events.select { |o| !(o['range'] & today).empty? }
+      day_events = events.select { |o| !(o.range & today).empty? }
       days << Day.new(today, day_events)
     end
   end
@@ -109,7 +108,7 @@ class Invoice
     def merge_ranges
       prev = nil
       events.each do |event|
-        if prev && prev.range.end >= event['range'].begin - 3600
+        if prev && prev.range.end >= event.range.begin - 3600
           # if events are separated by an hour or less, merge them
           prev.add(event)
         else
@@ -126,13 +125,13 @@ class Invoice
     attr_reader :range, :events
 
     def initialize event
-      @range = event['range']
+      @range = event.range
       @events = [event]
     end
 
     def add event
-      raise "events out of order: #{event['range'].begin} < #{@range.begin}" if event['range'].begin < @range.begin
-      @range = @range.begin...[@range.end, event['range'].end].max
+      raise "events out of order: #{event.range.begin} < #{@range.begin}" if event.range.begin < @range.begin
+      @range = @range.begin...[@range.end, event.range.end].max
       @events << event
     end
   end
