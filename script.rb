@@ -250,16 +250,16 @@ end
 
 invoices = []
 events = results.dup
-File.foreach("TOTALS", 'r') do |line|
+File.foreach("TOTALS").with_index do |line,i|
   fields = line.split(/\s*,\s*/).map(&:strip)
   next unless fields.first =~ /0*[1-9]/  # skip this line if it doesn't look like an invoice number
 
-  invoice = Invoice.new(fields, results)
+  invoice = Invoice.new(fields,i)
   events_for_invoice,events = events.partition { |o|
-    intersection = o['range'] & self.range
+    intersection = o['range'] & invoice.range
     !intersection.empty?
   }
-  invoice.events = events_for_invoice
+  invoice.add_events(events_for_invoice)
   invoices << invoice
 end
 
