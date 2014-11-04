@@ -94,17 +94,50 @@ class Invoice
     end
   end
 
+
   class Day
-    attr_reader :range, :events
+    attr_reader :range, :events, :ranges
 
     def initialize range, events
-      @range = range
+      @range = range    # time span of this day
       @events = events
+
+      puts "EVENTS:"
+      puts events.map { |e| e['range'] }.to_yaml
+
+      @ranges = []
+      merge_ranges
+    end
+
+    def merge_ranges
+      prev = nil
+      events.each do |event|
+        if prev && prev.range.end >= event['range'].begin - 3600
+          # if events are separated by an hour or less, merge them
+          prev.add(event)
+        else
+          # otherwise start a new range
+          prev = Range.new(event)
+          @ranges << prev
+        end
+      end
     end
   end
-end
 
 
-class Invoice::Day
+  class Range
+    attr_reader :range, :events
+
+    def initialize event
+      @range = event['range']
+      @events = [event]
+    end
+
+    def add event
+      raise "events out of order: #{event['range'].begin} < #{@range.begin}" if event['range'].begin < @range.begin
+      @range = @range.begin...[@range.end, event['range'].end].max
+      @events << event
+    end
+  end
 end
 

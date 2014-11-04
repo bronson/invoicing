@@ -277,7 +277,6 @@ invoices.reduce { |a,b|
   raise "Invoices #{a.invoice_number} and #{b.invoice_number} overlap: #{interval}" unless interval.empty?
   b }
 
-
 invoices.each do |invoice|
 end
 
