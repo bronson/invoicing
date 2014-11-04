@@ -4,6 +4,24 @@ require 'JSON'
 require 'time'
 require 'yaml'
 
+require_relative 'invoice'
+
+
+
+class Range
+  def intersection(other)
+    return self.end..self.end if self.end < other.begin
+    return other.end..other.end if other.end < self.begin
+    [self.begin, other.begin].max..[self.end, other.end].min
+  end
+
+  def empty?
+    self.begin == self.end
+  end
+
+  alias_method :&, :intersection
+end
+
 
 
 def time_floor t,mins
@@ -40,16 +58,6 @@ def iterate_days seq_start, seq_end
     time += 86400
     yield Time.new(otime.year, otime.month, otime.day), Time.new(time.year, time.month, time.day)
   end
-end
-
-class Range
-  def intersection(other)
-    return self.max..self.max if self.max < other.begin
-    return other.max..other.max if other.max < self.begin
-    [self.begin, other.begin].max..[self.end, other.end].min
-  end
-
-  alias_method :&, :intersection
 end
 
 # click everything to the nearest half hour
@@ -240,75 +248,22 @@ File.open("out.csv", 'w') do |file|
 end
 
 
-class Invoice
-  attr_accessor :invoice_number, :start_date, :end_date, :submit_date, :invoice_amount, :cleared_date, :check_amount, :check_number
-  attr_accessor :range, :events
-
-  # the relative date so you don't have to specify years in the totals file
-  # (intentionally different from $base_time so only used in TOTALS file)
-  @@base_time = nil
-
-  def initialize fields, events
-    self.invoice_number = fields.shift.sub!(/^0+/, '')
-    self.start_date     = parse_time(fields.shift)
-    self.end_date       = parse_time(fields.shift)
-    self.submit_date    = parse_time(fields.shift)
-    self.cleared_date   = parse_time(fields.shift)
-    self.invoice_amount = parse_currency(fields.shift)
-    self.check_amount   = parse_currency(fields.shift)
-
-    beg_time = Time.new(start_date.year, start_date.month, start_date.day, 0, 0, 0, start_date.utc_offset) + 6*60*60
-    end_time = Time.new(seq_end.year, seq_end.month, seq_end.day, 0, 0, 0, seq_start.utc_offset) + 6*60*60  # note: use seq_start's time zone
-    self.range = beg_time...(end_time + 86400)
-
-    self.events = select_events(range,events).sort_by { |e| e['range'].begin }
-  end
-
-  def parse_time str
-    if @@base_time
-      date = Time.parse(str, @@base_time)
-    else
-      raise 'First date must include full year' unless str =~ /\d\d\d\d/
-      date = Time.parsejjjG(str)
-    end
-
-    @@base_time = date
-    date
-  end
-
-  def parse_amount str
-    raise 'invalid currency' unless str =~ /(?=.)^\$?(([1-9][0-9]{0,2}(,[0-9]{3})*)|[0-9]+)?(\.[0-9]{1,2})?$/
-    str.gsub(/\$|,/, '').to_f
-  end
-
-  def cover? date
-    range.cover?(date)
-  end
-
-  def iterate_days
-    time = range.min
-    while time < range.max
-      otime = time
-      time += 86400
-      yield Time.new(otime.year, otime.month, otime.day)...Time.new(time.year, time.month, time.day)
-    end
-  end
-
-  def slurp_events
-
-    iterate_days do |today|
-
-    end
-  end
-end
-
-
 invoices = []
+events = results.dup
 File.foreach("TOTALS", 'r') do |line|
   fields = line.split(/\s*,\s*/).map(&:strip)
   next unless fields.first =~ /0*[1-9]/  # skip this line if it doesn't look like an invoice number
-  invoices << Invoice.new(fields, results)
+
+  invoice = Invoice.new(fields, results)
+  events_for_invoice,events = events.partition { |o|
+    intersection = o['range'] & self.range
+    !intersection.empty?
+  }
+  invoice.events = events_for_invoice
+  invoices << invoice
 end
+
+# TODO: complain about uncovered events
 
 # make sure invoice numbers don't conflict
 invoices.each.with_object({}) { |a,h|
@@ -322,21 +277,6 @@ invoices.reduce { |a,b|
 
 
 invoices.each do |invoice|
-  invoice.iterate_days do |today|
-    dow = today.min.strftime '%a'
-    date = today.min.strftime '%b %d'
-
-    merged.each do |range|
-      this = today & range
-      if this.begin != this.end  # !this.empty?
-        start = [r.begin, lo].max.strftime '%H:%M'
-        stop = [r.end, hi].min.strftime '%H:%M'
-        dur = ([r.end, hi].min - [r.begin, lo].max) / 3600
-
-        comments = events.map { |e| e['comment'] }
-      end
-    end
-  end
 end
 
 
