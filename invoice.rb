@@ -10,6 +10,8 @@ class Invoice
   def initialize fields, lineno
     @invoice_number = fields.shift.sub(/^0+/, '')
     @start_date     = parse_time(fields.shift)
+    old_base = @@base_time
+
     @end_date       = parse_time(fields.shift)
     @submit_date    = parse_time(fields.shift)
     @invoice_amount = parse_currency(fields.shift)
@@ -21,11 +23,16 @@ class Invoice
     raise "No end date in #{invoice_number} #{self.inspect} #{start_date}" if end_date.nil?
 
     beg_time = Time.new(start_date.year, start_date.month, start_date.day,
-                        0, 0, 0, start_date.utc_offset) + 6*60*60
+                        0, 0, 0, start_date.utc_offset)
     end_time = Time.new(end_date.year, end_date.month, end_date.day,
-                        0, 0, 0, start_date.utc_offset) + 6*60*60     # note: force same time zone as start_date   TODO: handle this better?
+                        0, 0, 0, start_date.utc_offset)
     @range = beg_time...(end_time + 86400)
     @events = []
+
+    # reset base_time back to start_date.  otherwise it might be the cleared date,
+    # which is probably after the following invoice's start date, so we'd increment
+    # the year thinking we wrapped.  that gets ridiculous quick.
+    @@base_time = old_base
   end
 
   def add_events events
@@ -37,6 +44,9 @@ class Invoice
 
     if @@base_time
       date = Time.parse(str, @@base_time)
+      date += 86400 if @@base_time && @@base_time > date  # if base_time is 11:30 and tt is 00:00, tt needs to be bumped to the following day
+      # if base_time is Dec 20 and date is Jan 4, then we know it needs to be January of the following year
+      date = Time.new(date.year+1, date.month, date.day, date.hour, date.min, date.sec, date.utc_offset) if @@base_time && @@base_time > date
     else
       raise 'First date must include full year' unless str =~ /\d\d\d\d/
       date = Time.parse(str)

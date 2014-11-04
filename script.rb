@@ -6,6 +6,7 @@ require 'yaml'
 
 require_relative 'invoice'
 
+require 'byebug'
 
 
 class Range
@@ -71,7 +72,8 @@ def timeparse time
       # base_time has been set so try parsing a relative time
       # todo: I should be a lot stricter about parsing invalid times
       tt = Time.parse(time, $base_time)   # try a relative time
-      tt += 86400 if $base_time && $base_time > tt
+      tt += 86400 if $base_time && $base_time > tt  # if base_time is 11:30 and tt is 00:00, tt needs to be bumped to the following day
+      tt = Time.new(tt.year+1, tt.month, tt.day, tt.hour, tt.min, tt.sec, tt.utc_offset) if $base_time && $base_time > tt
     else
       raise "the first time in the file must be rfc or iso: #{time}"
     end
@@ -252,7 +254,7 @@ invoices = []
 events = results.dup
 File.foreach("TOTALS").with_index do |line,i|
   fields = line.split(/\s*,\s*/).map(&:strip)
-  next unless fields.first =~ /0*[1-9]/  # skip this line if it doesn't look like an invoice number
+  next unless fields.first =~ /^0*[1-9]/  # skip this line if it doesn't look like an invoice number
 
   invoice = Invoice.new(fields,i)
   events_for_invoice,events = events.partition { |o|
@@ -263,6 +265,7 @@ File.foreach("TOTALS").with_index do |line,i|
   invoices << invoice
 end
 
+
 # TODO: complain about uncovered events
 
 # make sure invoice numbers don't conflict
@@ -272,7 +275,8 @@ invoices.each.with_object({}) { |a,h|
 }
 # make sure invoice date ranges don't overlap
 invoices.reduce { |a,b|
-  raise "Invoices #{a.invoice_number} and #{b.invoice_number} overlap!" if a.range & b.range
+  interval = a.range & b.range
+  raise "Invoices #{a.invoice_number} and #{b.invoice_number} overlap: #{interval}" unless interval.empty?
   b }
 
 
