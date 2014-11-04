@@ -159,12 +159,12 @@ end
 # then try to establish a range
 results.each { |r|
   if r['end']
-    r['range'] = r['date']..r['end']
+    r['range'] = r['date']...r['end']
   elsif r['duration']
-    r['range'] = r['date']..(r['date'] + 3600*r['duration'].to_i)
+    r['range'] = r['date']...(r['date'] + 3600*r['duration'].to_i)
   else
     # just assume it took 1/2 hour
-    r['range'] = r['date']..(r['date'] + 30*60);  # magic value -- assume task duration of 30 minutes
+    r['range'] = r['date']...(r['date'] + 30*60);  # magic value -- assume task duration of 30 minutes
   end
 }
 
@@ -264,7 +264,7 @@ File.foreach("TOTALS").with_index do |line,i|
 end
 
 
-puts "You have #{events.count} uncovered events!!" unless events.empty?
+puts "\nYou have #{events.count} uncovered events!" unless events.empty?
 
 # make sure invoice numbers don't conflict
 invoices.each.with_object({}) { |a,h|

@@ -102,9 +102,6 @@ class Invoice
       @range = range    # time span of this day
       @events = events
 
-      puts "EVENTS:"
-      puts events.map { |e| e['range'] }.to_yaml
-
       @ranges = []
       merge_ranges
     end
