@@ -6,8 +6,6 @@ require 'yaml'
 
 require_relative 'invoice'
 
-require 'byebug'
-
 
 class Range
   def intersection(other)
@@ -261,12 +259,12 @@ File.foreach("TOTALS").with_index do |line,i|
     intersection = o['range'] & invoice.range
     !intersection.empty?
   }
-  invoice.add_events(events_for_invoice)
+  invoice.compute_events(events_for_invoice)
   invoices << invoice
 end
 
 
-# TODO: complain about uncovered events
+puts "You have #{events.count} uncovered events!!" unless events.empty?
 
 # make sure invoice numbers don't conflict
 invoices.each.with_object({}) { |a,h|

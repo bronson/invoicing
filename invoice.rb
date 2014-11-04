@@ -1,7 +1,7 @@
 class Invoice
   attr_reader :invoice_number, :start_date, :end_date, :submit_date, :invoice_amount,
     :cleared_date, :check_amount, :check_number
-  attr_reader :range, :events, :line_number
+  attr_reader :range, :events, :line_number, :days
 
   # the relative date so you don't have to specify years in the totals file
   # (intentionally different from $base_time so only used in TOTALS file)
@@ -35,8 +35,9 @@ class Invoice
     @@base_time = old_base
   end
 
-  def add_events events
+  def compute_events events
     @events.concat(events)
+    compute_days
   end
 
   def parse_time str
@@ -67,8 +68,8 @@ class Invoice
   end
 
   def iterate_days
-    time = range.min
-    while time < range.max
+    time = range.begin
+    while time < range.end
       otime = time
       time += 86400
       yield Time.new(otime.year, otime.month, otime.day)...Time.new(time.year, time.month, time.day)
@@ -82,6 +83,23 @@ class Invoice
   def grid_data
     result = []
     iterate_days do |today|
+    end
+  end
+
+  def compute_days
+    @days = []
+    iterate_days do |today|
+      day_events = events.select { |o| !(o['range'] & today).empty? }
+      days << Day.new(today, day_events)
+    end
+  end
+
+  class Day
+    attr_reader :range, :events
+
+    def initialize range, events
+      @range = range
+      @events = events
     end
   end
 end
