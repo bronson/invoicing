@@ -330,11 +330,14 @@ end
 
 invoices = []
 ranges = EventRange.all.dup
+current_rate = nil
+
 File.foreach("TOTALS").with_index do |line,i|
   fields = line.split(/\s*,\s*/).map(&:strip)
+  current_rate = $1.to_f if fields.first =~ /rate: \$?(\d*\.?\d*)\s*\/\s*hour/
   next unless fields.first =~ /^0*[1-9]/  # skip this line if it doesn't look like an invoice number
 
-  invoice = Invoice.new(fields,i)
+  invoice = Invoice.new(fields,i,current_rate)
   ranges_for_invoice,ranges = EventRange.partition(ranges, invoice.range)
 
   invoice.compute_ranges(ranges_for_invoice)
@@ -358,4 +361,8 @@ invoices.reduce { |a,b|
 
 # make sure the total dollar amount matches for each invoice
 invoices.each do |invoice|
+  if invoice.computed_amount != invoice.invoice_amount
+    raise "Invoice #{invoice.invoice_number}: computed amount #{invoice.computed_amount.inspect} " +
+      "doesn't equal invoiced amount #{invoice.invoice_amount}"
+  end
 end

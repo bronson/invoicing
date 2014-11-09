@@ -1,13 +1,13 @@
 class Invoice
   attr_reader :invoice_number, :start_date, :end_date, :submit_date, :invoice_amount,
     :cleared_date, :check_amount, :check_number
-  attr_reader :range, :event_ranges, :line_number, :days
+  attr_reader :range, :event_ranges, :line_number, :days, :hourly_rate
 
   # the relative date so you don't have to specify years in the totals file
   # (intentionally different from $base_time so only used in TOTALS file)
   @@base_time = nil
 
-  def initialize fields, lineno
+  def initialize fields, lineno, rate
     @invoice_number = fields.shift.sub(/^0+/, '')
     @start_date     = parse_time(fields.shift)
     old_base = @@base_time
@@ -18,6 +18,7 @@ class Invoice
     @cleared_date   = parse_time(fields.shift)
     @check_amount   = parse_currency(fields.shift)
     @line_number    = lineno
+    @hourly_rate    = rate
 
     raise "No start date in #{invoice_number}" if start_date.nil?
     raise "No end date in #{invoice_number} #{self.inspect} #{start_date}" if end_date.nil?
@@ -90,6 +91,10 @@ class Invoice
 
   def hours
     Day.hours event_ranges
+  end
+
+  def computed_amount
+    hours * hourly_rate
   end
 
 
