@@ -36,7 +36,7 @@ class Invoice
 
   def compute_ranges ranges
     @event_ranges = ranges
-    # compute_days
+    compute_days
   end
 
   def parse_time str
@@ -76,30 +76,38 @@ class Invoice
   end
 
   def day_array
-    (range.begin.to_i...range.end.to_i).step(86400).map { |n| Time.at(n) }
+    (range.begin.to_i...range.end.to_i).step(86400).map { |n| Time.at(n)...Time.at(n+86400) }
   end
 
-  def grid_data
-    result = []
-    iterate_days do |today|
+  def compute_days
+    @days ||= begin
+      day_array.map do |today|
+        # note: must match ranges_for_invoice, todo: should extract
+        day_events = event_ranges.select { |e| today.cover? e.range.begin }
+        Day.new(today, day_events)
+      end
     end
   end
 
-  # def compute_days
-  #   @days = []
-  #   iterate_days do |today|
-  #     day_events = events.select { |o| !(o.range & today).empty? }
-  #     days << Day.new(today, day_events)
-  #   end
-  # end
+  def hours
+    Day.hours event_ranges
+  end
 
 
   class Day
     attr_reader :range, :event_ranges
 
-    def initialize range, events
+    def initialize range, event_ranges
       @range = range    # time span of this day
       @event_ranges = event_ranges
+    end
+
+    def hours
+      self.class.hours event_ranges
+    end
+
+    def self.hours event_ranges
+      event_ranges.reduce(0) { |sum,range| sum + range.hours }
     end
   end
 end

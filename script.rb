@@ -147,6 +147,10 @@ class EventRange
     range.begin
   end
 
+  def hours
+    (range.end - range.begin) / 3600.0
+  end
+
   def self.all
     @@all
   end
@@ -347,12 +351,6 @@ invoices.reduce { |a,b|
   raise "Invoices #{a.invoice_number} and #{b.invoice_number} overlap: #{interval}" unless interval.empty?
   b }
 
+# make sure the total dollar amount matches for each invoice
 invoices.each do |invoice|
 end
-
-
-
-  # collect events between startdate and enddate
-  # ensure they equal the invoice amount (if it exists)
-
-  # FINALLY, do we have uninvoiced events left over?
