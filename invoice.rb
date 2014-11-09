@@ -82,8 +82,7 @@ class Invoice
   def compute_days
     @days ||= begin
       day_array.map do |today|
-        # note: must match ranges_for_invoice, todo: should extract
-        day_events = event_ranges.select { |e| today.cover? e.range.begin }
+        day_events,* = EventRange.partition(event_ranges, today)
         Day.new(today, day_events)
       end
     end

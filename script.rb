@@ -168,6 +168,12 @@ class EventRange
       end
     end
   end
+
+  # used to distribute event ranges into time ranges.
+  # returns two arrays: matches (events within the time range), and nomatches (everything else)
+  def self.partition event_ranges, time_range
+    event_ranges.partition { |o| time_range.cover?(o.begin) }
+  end
 end
 
 
@@ -329,9 +335,8 @@ File.foreach("TOTALS").with_index do |line,i|
   next unless fields.first =~ /^0*[1-9]/  # skip this line if it doesn't look like an invoice number
 
   invoice = Invoice.new(fields,i)
-  ranges_for_invoice,ranges = ranges.partition { |o|
-    invoice.range.cover?(o.begin)
-  }
+  ranges_for_invoice,ranges = EventRange.partition(ranges, invoice.range)
+
   invoice.compute_ranges(ranges_for_invoice)
   invoices << invoice
 end
