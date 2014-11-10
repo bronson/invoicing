@@ -193,8 +193,8 @@ end
 Dir['*.lines'].each do |file|
   $base_time = nil
   File.open(file).each do |line|
-    next if line =~ /^\s*$/ # blank lines
-    next if line =~ /^\s*#/ # comments
+    line = line.sub(/#.*$/, '')   # strip comments
+    next if line =~ /^\s*$/       # blank lines
 
     unless $base_time
       $base_time = timeparse(line)
@@ -333,6 +333,7 @@ ranges = EventRange.all.dup
 current_rate = nil
 
 File.foreach("TOTALS").with_index do |line,i|
+  line = line.sub(/#.*$/, '')   # strip comments
   fields = line.split(/\s*,\s*/).map(&:strip)
   current_rate = $1.to_f if fields.first =~ /rate: \$?(\d*\.?\d*)\s*\/\s*hour/
   next unless fields.first =~ /^0*[1-9]/  # skip this line if it doesn't look like an invoice number
@@ -361,7 +362,7 @@ invoices.reduce { |a,b|
 
 # make sure the total dollar amount matches for each invoice
 invoices.each do |invoice|
-  if invoice.computed_amount != invoice.invoice_amount
+  if !invoice.invoice_amount.nil? && invoice.computed_amount != invoice.invoice_amount
     raise "Invoice #{invoice.invoice_number}: computed amount #{invoice.computed_amount.inspect} " +
       "doesn't equal invoiced amount #{invoice.invoice_amount}"
   end
