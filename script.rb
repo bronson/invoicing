@@ -190,7 +190,7 @@ Dir['*.json'].each do |file|
 end
 
 
-Dir['*.lines'].each do |file|
+Dir['*.hours'].each do |file|
   $base_time = nil
   File.open(file).each do |line|
     line = line.sub(/#.*$/, '')   # strip comments
@@ -219,7 +219,7 @@ end
 seq_start = Time.parse('16-03-2014')
 seq_end = Time.parse('23-08-2014')
 
-Dir['*.emails'].each do |name|
+Dir['*.mbox'].each do |name|
   File.open(name) do |file|
     loop do
       line = file.gets until file.eof? || line =~ /^From: Scott Bronson/
@@ -366,4 +366,8 @@ invoices.each do |invoice|
     raise "Invoice #{invoice.invoice_number}: computed amount #{invoice.computed_amount.inspect} " +
       "doesn't equal invoiced amount #{invoice.invoice_amount}"
   end
+end
+
+invoices.each do |invoice|
+  
 end
