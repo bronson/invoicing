@@ -4,48 +4,13 @@ require 'JSON'
 require 'time'
 require 'yaml'
 
+require_relative 'range_fixes'
+require_relative 'event'
 require_relative 'invoice'
-
-
-class Range
-  def intersection(other)
-    return self.end..self.end if self.end < other.begin
-    return other.end..other.end if other.end < self.begin
-    [self.begin, other.begin].max..[self.end, other.end].min
-  end
-
-  def empty?
-    self.begin == self.end
-  end
-
-  alias_method :&, :intersection
-end
-
 
 
 def time_floor t,mins
   Time.at(t.to_i/(mins*60)*(mins*60))
-end
-
-def merge_ranges(ranges)
-  ranges = ranges.sort_by {|r| r.first }
-  *outages = ranges.shift
-  ranges.each do |r|
-    lastr = outages[-1]
-    if lastr.last >= r.first - 3600   # merges two blocks if they're less than an hour apart
-      outages[-1] = lastr.first..[r.last, lastr.last].max
-    else
-      outages.push(r)
-    end
-  end
-  outages
-end
-
-# warning: if you're iterating days or larger, daylight savings time will screw you up
-def iterate_time start_time, end_time, step
-  begin
-    yield(start_time)
-  end while (start_time += step) <= end_time
 end
 
 # won't get fooled by DST.
@@ -81,99 +46,6 @@ def timeparse time
 
   raise "Invalid time #{time}" if tt.nil?
   time_floor(tt, 30);   # magic value
-end
-
-
-class Event
-  attr_reader :date, :end, :duration, :comment, :hash, :to, :range, :src
-  @@all = []
-
-  def initialize args
-    @date = args.delete('date')
-    @end = args.delete('end')
-    @duration = 3600*args.delete('duration').to_i if args['duration']
-    @comment = args.delete('comment')
-    @hash = args.delete('hash')
-    @to = args.delete('to')
-    @src = args.delete('src')   # TODO: looks like src is unused?
-
-    raise "Unrecognized param: #{args.inspect}" unless args.empty?
-    establish_range
-
-    @@all << self
-  end
-
-  def establish_range
-    if self.end
-      @range = self.date...self.end
-    elsif duration
-      @range = date...(date + duration)
-    else
-      # magic value -- assume task duration of 30 minutes
-      @range = date...(date + 30*60);
-    end
-  end
-
-  def self.sort
-    @@all.sort_by! { |r| r.range.min }
-  end
-
-  def self.all
-    @@all
-  end
-end
-
-
-class EventRange
-  attr_reader :range, :events
-  @@all = []
-
-  def initialize event
-    @range = event.range
-    @events = [event]
-  end
-
-  def add event
-    raise "events out of order: #{event.range.begin} < #{@range.begin}" if event.range.begin < @range.begin
-    @range = @range.begin...[@range.end, event.range.end].max
-    @events << event
-  end
-
-  def end
-    range.end
-  end
-
-  def begin
-    range.begin
-  end
-
-  def hours
-    (range.end - range.begin) / 3600.0
-  end
-
-  def self.all
-    @@all
-  end
-
-  def self.merge_events
-    prev = nil
-    Event.all.each do |event|
-      if prev && prev.range.end >= event.range.begin - 3600
-        # if events are separated by an hour or less, merge them
-        prev.add(event)
-      else
-        # otherwise start a new range
-        prev = EventRange.new(event)
-        @@all << prev
-      end
-    end
-  end
-
-  # used to distribute event ranges into time ranges.
-  # returns two arrays: matches (events within the time range), and nomatches (everything else)
-  def self.partition event_ranges, time_range
-    event_ranges.partition { |o| time_range.cover?(o.begin) }
-  end
 end
 
 
