@@ -12,6 +12,8 @@ First you drop a bunch of files with data in this folder.  The files can be:
 
 * .mbox file: a From-delimited mbox file containing emails from the project.
 
+* TODO: other sensitive files are TOTALS, .lines, .emails, .csv, .txt
+
 Now, run the ./run script.  This crunches all the data in the files down
 into out.csv and out.txt.  Look at the report it prints...  Does it look
 correct?  Especially when diff'd against last month's?

@@ -97,6 +97,10 @@ class Invoice
     hours * hourly_rate
   end
 
+  def title
+    "Invoice #{invoice_number}"
+  end
+
 
   class Day
     attr_reader :range, :event_ranges
