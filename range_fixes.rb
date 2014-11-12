@@ -12,6 +12,10 @@ class Range
     self.begin == self.end
   end
 
+  def span
+    self.end - self.begin    #   Range#size doesn't work
+  end
+
   alias_method :&, :intersection
 end
 

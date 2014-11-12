@@ -62,11 +62,16 @@ class EventRange
   end
 
   def hours
-    (range.end - range.begin) / 3600.0
+    range.span / 3600.0
   end
 
   def task
-    "The Task!"
+    # returns the comment for the longest duration task in the range
+    # and gives an indication of how many others there were in the same range
+    longest = events.max_by { |event| event.range.span }
+    more = ''
+    more = " (+#{events.count-1})" if events.count > 1
+    longest.comment + more
   end
 
   def self.all
