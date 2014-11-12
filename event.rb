@@ -65,6 +65,10 @@ class EventRange
     (range.end - range.begin) / 3600.0
   end
 
+  def task
+    "The Task!"
+  end
+
   def self.all
     @@all
   end

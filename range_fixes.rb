@@ -1,4 +1,4 @@
-# These are some monkeypatches that make Range a little nicer to use
+# These are some monkeypatches that make the Range class a little nicer to use
 
 class Range
   def intersection(other)

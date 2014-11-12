@@ -3,24 +3,57 @@ html
   head
     title= title
     meta name="viewport" content="width=device-width, initial-scale=1.0"
+    /* meta http-equiv="refresh" content="0.2" */
     - stylesheets.each do |sheet|
       link rel="stylesheet" href=sheet
+
   body
     .block-group
 
       .metadata.block
-        .invoice Invoice 13
-        .date    Sep 28, 2014
+        .invoice= title
+        .date=    datefmt submit_date
 
       .sender.block
         .name     AUTHOR
         .address  AUTHOR ADDRESS
         .address2 AUTHOR CITY, STATE ZIP
-        / lame, impossible to have text that starts with '(': https://github.com/slim-template/slim/issues/441
-        .phone
-          |       (AREA) PHONE-NUMBER
+        .phone=   "(AREA) PHONE-NUMBER"
 
       .recipient.block
         .name     CLIENT NAME
         .address  CLIENT ADDRESS
         .address2 CLIENT CITY, STATE ZIP
+
+      .grid.header.block
+        .block-group
+          .block.dowday   Day
+          .block.in    In
+          .block.out   Out
+          .block.hours Hours
+          .block.task  Task
+
+      .grid.block
+        .block-group
+          - days.each do |day|
+            - if day.date.sunday?
+              .block.sunday-separator
+            - unless day.event_ranges.empty?
+              - day.event_ranges.each.with_index do |event,i|
+                .block.dow=   i == 0 ? day.date.strftime("%a") : ''
+                .block.day=   i == 0 ? day.date.strftime("%b %d") : ''
+                .block.in=    timefmt event.begin
+                .block.out=   timefmt event.end
+                .block.hours= event.hours
+                .block.task=  event.task
+            - else
+              .block.dow=    day.date.strftime("%a")
+              .block.day=    day.date.strftime("%b %d")
+          .block.sunday-separator
+
+      .label.block.total-hours  Total Hours:
+      .value.block.total-hours= hours
+      .label.block.hourly-rate  Hourly Rate:
+      .value.block.hourly-rate= "$%.2f" % hourly_rate
+      .label.block.full-amount  Total:
+      .value.block.full-amount= "$%.2f" % computed_amount

@@ -3,6 +3,43 @@ body {
   font-family: sans-serif;
 }
 
-.metadata { margin-left: 60% }
-.sender { width: 50%; }
-.recipient { width: 50%; }
+.metadata {
+  margin-left: 60%
+}
+
+.sender {
+  /* width: 50%; */
+}
+
+.recipient {
+  /* width: 50%; */
+  margin-top: 1em;
+}
+
+.grid.header {
+  margin-top: 1em;
+  border-bottom: none;
+  font-weight: bold;
+}
+
+.grid {
+  border: 1px solid gray;
+  text-align: center;
+}
+
+.block {
+  min-height: 1px;  /* otherwise empty divs have 0 width */
+}
+
+.dowday { width: 10%; clear: left }
+.dow { width: 5%; clear: left }
+.day { width: 5% }
+.in, .out, .hours { width: 10% }
+.task { width: 55%; text-align: left; }
+
+.sunday-separator { height: 1em; }
+
+.label { width: 30%; text-align: right }
+.value { margin-left: 2%; width: 68% }
+.total-hours { margin-top: 1em; }
+.full-amount { margin-top: 1em; font-weight: bold }

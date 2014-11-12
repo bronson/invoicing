@@ -101,6 +101,14 @@ class Invoice
     "Invoice #{invoice_number}"
   end
 
+  def datefmt date
+    date ? date.strftime("%b %-d, %Y") : ''
+  end
+
+  def timefmt time
+    time ? time.strftime("%H:%M") : ''
+  end
+
 
   class Day
     attr_reader :range, :event_ranges
@@ -116,6 +124,10 @@ class Invoice
 
     def self.hours event_ranges
       event_ranges.reduce(0) { |sum,range| sum + range.hours }
+    end
+
+    def date
+      range.begin
     end
   end
 end

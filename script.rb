@@ -257,7 +257,7 @@ stylesheets = %w[
 template = Tilt.new('invoice.slim')
 
 invoices.each do |invoice|
-  html = template.render(nil, title: invoice.title, stylesheets: stylesheets)
+  html = template.render(invoice, stylesheets: stylesheets)
   File.write("#{invoice.title}.html", html)
 
   # apparently wkhtmltopdf does try to support page-break-inside: avoid

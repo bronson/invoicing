@@ -3,3 +3,8 @@ source 'https://rubygems.org'
 gem 'slim'
 gem 'pdfkit'
 gem 'wkhtmltopdf-heroku', git: 'https://github.com/Thinkei/wkhtmltopdf-heroku'
+
+group :development do
+  gem 'guard-bundler', require: false
+  gem 'guard-shell', require: false
+end
