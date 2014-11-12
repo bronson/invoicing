@@ -20,22 +20,28 @@ body {
   margin-top: 1em;
   border-bottom: none;
   font-weight: bold;
+  line-height: 180%;
 }
 
 .grid {
   border: 1px solid gray;
   text-align: center;
+  line-height: 140%;
 }
 
 .block {
   min-height: 1px;  /* otherwise empty divs have 0 width */
 }
 
-.dowday { width: 10%; clear: left }
+.dowday { width: 15%; clear: left }
 .dow { width: 5%; clear: left }
-.day { width: 5% }
-.in, .out, .hours { width: 10% }
-.task { width: 55%; text-align: left; }
+.day { width: 10% }
+.in, .out, .hours { width: 7% }
+.task {
+  width: 64%;  /* 100 - dowday - in - out - hours */
+  text-align: left;
+  white-space: nowrap;
+}
 
 .sunday-separator { height: 1em; }
 

@@ -68,12 +68,12 @@ class EventRange
   # returns the comment for the longest duration task in the range
   # and gives an indication of how many others there were in the same range
   def tasks max_len
-    result = []
     events_by_duration = events.sort_by { |event| event.range.span }
+    result = [events_by_duration.pop.comment]
 
     loop do
       size = result.map { |r| r.length }.reduce(:+) || 0
-      break if size > max_len-4 || events_by_duration.empty?
+      break if events_by_duration.empty? || size+events_by_duration.last.comment.length > max_len-4
       result << events_by_duration.pop.comment
     end
 
