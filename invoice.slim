@@ -39,13 +39,13 @@ html
             - if day.date.sunday?
               .block.sunday-separator
             - unless day.event_ranges.empty?
-              - day.event_ranges.each.with_index do |event,i|
+              - day.event_ranges.each.with_index do |range,i|
                 .block.dow=   i == 0 ? day.date.strftime("%a") : ''
                 .block.day=   i == 0 ? day.date.strftime("%b %d") : ''
-                .block.in=    timefmt event.begin
-                .block.out=   timefmt event.end
-                .block.hours= event.hours
-                .block.task=  event.task
+                .block.in=    timefmt range.begin
+                .block.out=   timefmt range.end
+                .block.hours= range.hours
+                .block.task=  range.tasks(50)
             - else
               .block.dow=    day.date.strftime("%a")
               .block.day=    day.date.strftime("%b %d")

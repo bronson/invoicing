@@ -7,4 +7,5 @@ gem 'wkhtmltopdf-heroku', git: 'https://github.com/Thinkei/wkhtmltopdf-heroku'
 group :development do
   gem 'guard-bundler', require: false
   gem 'guard-shell', require: false
+  gem 'byebug'
 end

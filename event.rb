@@ -65,13 +65,21 @@ class EventRange
     range.span / 3600.0
   end
 
-  def task
-    # returns the comment for the longest duration task in the range
-    # and gives an indication of how many others there were in the same range
-    longest = events.max_by { |event| event.range.span }
-    more = ''
-    more = " (+#{events.count-1})" if events.count > 1
-    longest.comment + more
+  # returns the comment for the longest duration task in the range
+  # and gives an indication of how many others there were in the same range
+  def tasks max_len
+    result = []
+    events_by_duration = events.sort_by { |event| event.range.span }
+
+    loop do
+      size = result.map { |r| r.length }.reduce(:+) || 0
+      break if size > max_len-4 || events_by_duration.empty?
+      result << events_by_duration.pop.comment
+    end
+
+    result << "+#{events.count-1}" if events.count > 1
+
+    result.join(", ")
   end
 
   def self.all

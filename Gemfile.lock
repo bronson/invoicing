@@ -7,9 +7,15 @@ GIT
 GEM
   remote: https://rubygems.org/
   specs:
+    byebug (3.5.1)
+      columnize (~> 0.8)
+      debugger-linecache (~> 1.2)
+      slop (~> 3.6)
     celluloid (0.16.0)
       timers (~> 4.0.0)
     coderay (1.1.0)
+    columnize (0.8.9)
+    debugger-linecache (1.2.0)
     ffi (1.9.6)
     formatador (0.2.5)
     guard (2.8.2)
@@ -52,6 +58,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  byebug
   guard-bundler
   guard-shell
   pdfkit

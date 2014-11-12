@@ -257,8 +257,12 @@ stylesheets = %w[
 template = Tilt.new('invoice.slim')
 
 invoices.each do |invoice|
+  content = File.read("#{invoice.title}.html") rescue Errno::ENOENT
   html = template.render(invoice, stylesheets: stylesheets)
-  File.write("#{invoice.title}.html", html)
+  if content != html
+    puts "Writing #{invoice.title}"
+    File.write("#{invoice.title}.html", html)
+  end
 
   # apparently wkhtmltopdf does try to support page-break-inside: avoid
   # can also pass params in meta tags: <head><meta name="pdfkit-page_size" content="Letter">...
@@ -266,11 +270,4 @@ invoices.each do |invoice|
   # kit.stylesheets.concat stylesheets
   # file = kit.to_file('/tmp/tt.pdf')
 end
-
-
-
-
-
-
-
 
