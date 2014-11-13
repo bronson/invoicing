@@ -17,6 +17,8 @@ class Invoice
     @invoice_amount = parse_currency(fields.shift)
     @cleared_date   = parse_time(fields.shift)
     @check_amount   = parse_currency(fields.shift)
+    @check_number   = fields.shift
+
     @line_number    = lineno
     @hourly_rate    = rate
 

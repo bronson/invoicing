@@ -57,6 +57,41 @@ def timeparse time
 end
 
 
+def check_cleared_checks invoices
+  cleared_checks = {}
+  invoice_total = {}
+
+  # ensure check amounts are consistent
+  invoices.each do |invoice|
+    next unless invoice.check_number
+    invoice_total[invoice.check_number] ||= 0
+    invoice_total[invoice.check_number] += invoice.invoice_amount
+
+    check = cleared_checks[invoice.check_number]
+
+    if check
+      raise "cleared date for invoice #{invoice.invoice_number} must match invoice #{check[:invoice_number]}" unless invoice.cleared_date == check[:cleared_date]
+      raise "check amount for invoice #{invoice.invoice_number} must match invoice #{check[:invoice_number]}" unless invoice.check_amount == check[:check_amount]
+      raise "check number for invoice #{invoice.invoice_number} must match invoice #{check[:invoice_number]}" unless invoice.check_number == check[:check_number]
+    else
+      cleared_checks[invoice.check_number] = {
+        cleared_date: invoice.cleared_date,
+        check_amount: invoice.check_amount,
+        check_number: invoice.check_number,
+        invoice_number: invoice.invoice_number  # the first invoice that mentions this check
+      }
+    end
+  end
+
+  raise "this is impossible" if cleared_checks.keys.sort != invoice_total.keys.sort
+
+  # ensure invoice amounts add up to the check amount
+  invoice_total.each do |num,amt|
+    raise "invoices for check #{num} total to #{amt} not #{cleared_checks[num][:check_amount]}" unless amt == cleared_checks[num][:check_amount]
+  end
+end
+
+
 Dir['*.json'].each do |file|
   $base_time = nil
   json = JSON.parse File.read(file)
@@ -225,7 +260,6 @@ File.foreach("TOTALS").with_index do |line,i|
   invoices << invoice
 end
 
-
 count = ranges.reduce(0) { |v,o| v += o.events.size }
 puts "\nYou have #{count} uncovered events!" unless count == 0
 
@@ -247,6 +281,9 @@ invoices.each do |invoice|
       "doesn't equal invoiced amount #{invoice.invoice_amount}"
   end
 end
+
+# make sure each cleared check matches its invoice totals & is consistent
+check_cleared_checks(invoices)
 
 
 stylesheets = %w[
@@ -273,4 +310,5 @@ invoices.each do |invoice|
     kit.to_file("#{invoice.title}.pdf")
   end
 end
+
 
