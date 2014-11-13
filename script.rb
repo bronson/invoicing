@@ -15,6 +15,9 @@ require 'pdfkit'
 require 'slim'
 require 'tilt'
 
+require 'stringio'
+require 'rexml/document'
+
 
 
 def time_floor t,mins
@@ -302,7 +305,9 @@ invoices.each do |invoice|
 
   if content != html
     puts "Writing #{invoice.title}"
-    File.write("#{invoice.title}.html", html)
+    s = StringIO.new
+    REXML::Document.new(html).write(s, 2)
+    File.write("#{invoice.title}.html", s.string)
 
     # apparently wkhtmltopdf does try to support page-break-inside: avoid
     kit = PDFKit.new(html, page_size: 'Letter', title: invoice.title)
