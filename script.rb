@@ -14,10 +14,7 @@ require 'wkhtmltopdf/heroku'
 require 'pdfkit'
 require 'slim'
 require 'tilt'
-
-require 'stringio'
-require 'rexml/document'
-
+require 'nokogiri'
 
 
 def time_floor t,mins
@@ -303,10 +300,8 @@ invoices.each do |invoice|
 
   html = template.render(invoice, stylesheets: stylesheets)
 
-  # pretty print the html
-  s = StringIO.new
-  REXML::Document.new(html).write(s, 2)
-  html = s.string
+  # pretty-print the html
+  html = Nokogiri::HTML(html).to_xhtml(indent: 3)
 
   if content != html
     puts "Writing #{invoice.title}"
