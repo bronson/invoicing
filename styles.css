@@ -1,6 +1,7 @@
 body {
   margin: 0px;
   font-family: sans-serif;
+  font-size: 16pt;
 }
 
 .metadata {
@@ -13,14 +14,18 @@ body {
 
 .recipient {
   /* width: 50%; */
-  margin-top: 1em;
+  margin-top: 2em;
 }
 
 .grid.header {
-  margin-top: 1em;
+  margin-top: 2em;
   border-bottom: none;
   font-weight: bold;
   line-height: 180%;
+}
+
+.grid.header .task {
+  padding-left: 1em;
 }
 
 .grid {
@@ -33,14 +38,16 @@ body {
   min-height: 1px;  /* otherwise empty divs have 0 width */
 }
 
-.dowday { width: 15%; clear: left }
+.dowday { width: 16%; clear: left }
 .dow { width: 5%; clear: left }
-.day { width: 10% }
+.day { width: 11% }
 .in, .out, .hours { width: 7% }
 .task {
-  width: 64%;  /* 100 - dowday - in - out - hours */
+  width: 63%;  /* 100 - dowday - in - out - hours */
   text-align: left;
   white-space: nowrap;
+  font-size: 15pt;
+  font-family: "Helvetica Narrow","Arial Narrow";
 }
 
 .sunday-separator { height: 1em; }

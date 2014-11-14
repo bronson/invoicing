@@ -69,15 +69,6 @@ class Invoice
     range.cover?(date)
   end
 
-  def iterate_days
-    time = range.begin
-    while time < range.end
-      otime = time
-      time += 86400
-      yield Time.new(otime.year, otime.month, otime.day)...Time.new(time.year, time.month, time.day)
-    end
-  end
-
   def day_array
     (range.begin.to_i...range.end.to_i).step(86400).map { |n| Time.at(n)...Time.at(n+86400) }
   end
