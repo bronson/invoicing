@@ -92,6 +92,40 @@ def check_cleared_checks invoices
 end
 
 
+def render_invoices invoices
+  stylesheets = %w[
+    pocketgrid.css
+    styles.css
+  ]
+
+  template = Tilt.new('invoice.slim')
+
+  invoices.each do |invoice|
+    if File.exist?("#{invoice.title}.html") && File.exist?("#{invoice.title}.pdf")
+      # we don't want to overwrite invoices that have already been submitted
+      next if invoice.submit_date
+
+      content = File.read("#{invoice.title}.html")
+    end
+
+    html = template.render(invoice, stylesheets: stylesheets)
+
+    # pretty-print the html
+    html = Nokogiri::HTML(html).to_xhtml(indent: 3)
+
+    if content != html
+      $stderr.puts "Writing #{invoice.title}"
+      File.write("#{invoice.title}.html", html)
+
+      # apparently wkhtmltopdf does try to support page-break-inside: avoid
+      kit = PDFKit.new(html, page_size: 'Letter', title: invoice.title)
+      kit.stylesheets.concat(stylesheets)
+      kit.to_file("#{invoice.title}.pdf")
+    end
+  end
+end
+
+
 Dir['*.json'].each do |file|
   $base_time = nil
   json = JSON.parse File.read(file)
@@ -284,34 +318,6 @@ end
 
 # make sure each cleared check matches its invoice totals & is consistent
 check_cleared_checks(invoices)
-
-
-stylesheets = %w[
-  pocketgrid.css
-  styles.css
-]
-
-template = Tilt.new('invoice.slim')
-
-invoices.each do |invoice|
-  if File.exist?("#{invoice.title}.html") && File.exist?("#{invoice.title}.pdf")
-    content = File.read("#{invoice.title}.html")
-  end
-
-  html = template.render(invoice, stylesheets: stylesheets)
-
-  # pretty-print the html
-  html = Nokogiri::HTML(html).to_xhtml(indent: 3)
-
-  if content != html
-    $stderr.puts "Writing #{invoice.title}"
-    File.write("#{invoice.title}.html", html)
-
-    # apparently wkhtmltopdf does try to support page-break-inside: avoid
-    kit = PDFKit.new(html, page_size: 'Letter', title: invoice.title)
-    kit.stylesheets.concat(stylesheets)
-    kit.to_file("#{invoice.title}.pdf")
-  end
-end
+render_invoices(invoices)
 
 
