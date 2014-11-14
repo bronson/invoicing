@@ -82,6 +82,14 @@ class Invoice
     end
   end
 
+  def edited_days
+    result = days.dup
+    result.shift while result.first.empty?
+    result.pop while result.last.empty?
+    result.reject! { |d| d.empty? && (d.date.saturday? || d.date.sunday?) }
+    result
+  end
+
   def hours
     Day.hours event_ranges
   end
@@ -105,6 +113,7 @@ class Invoice
 
   class Day
     attr_reader :range, :event_ranges
+    attr_reader :first_in_week
 
     def initialize range, event_ranges
       @range = range    # time span of this day
@@ -121,6 +130,10 @@ class Invoice
 
     def date
       range.begin
+    end
+
+    def empty?
+      event_ranges.empty?
     end
   end
 end

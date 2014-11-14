@@ -304,7 +304,7 @@ invoices.each do |invoice|
   html = Nokogiri::HTML(html).to_xhtml(indent: 3)
 
   if content != html
-    puts "Writing #{invoice.title}"
+    $stderr.puts "Writing #{invoice.title}"
     File.write("#{invoice.title}.html", html)
 
     # apparently wkhtmltopdf does try to support page-break-inside: avoid

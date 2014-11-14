@@ -36,8 +36,9 @@ html
 
       .grid.block
         .block-group
-          - days.each do |day|
-            - if day.date.sunday?
+          - prev = nil
+          - edited_days.each do |day|
+            - if !prev || prev.date.strftime("%U").to_i != day.date.strftime("%U").to_i
               .block.sunday-separator
             - unless day.event_ranges.empty?
               - day.event_ranges.each.with_index do |range,i|
@@ -50,6 +51,7 @@ html
             - else
               .block.dow=    day.date.strftime("%a")
               .block.day=    day.date.strftime("%b %d")
+            - prev = day
           .block.sunday-separator
 
       .label.block.total-hours  Total Hours:
