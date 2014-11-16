@@ -111,7 +111,7 @@ def render_invoices invoices
     html = template.render(invoice, stylesheets: stylesheets)
 
     # pretty-print the html
-    html = Nokogiri::HTML(html).to_xhtml(indent: 3)
+    html = Nokogiri::XML(html, &:noblanks).to_xhtml(indent: 3)
 
     if content != html
       $stderr.puts "Writing #{invoice.title}"

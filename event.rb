@@ -35,6 +35,17 @@ class Event
   def self.all
     @@all
   end
+
+  def hours
+    range.span / 3600.0
+  end
+
+  def full_comment
+    str = comment
+    str += " (#{hash})" if hash
+    str += " (#{to})" if to
+    str
+  end
 end
 
 

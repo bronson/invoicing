@@ -50,6 +50,25 @@ body {
   font-family: "Helvetica Narrow","Arial Narrow";
 }
 
+.overlay-in, .overlay-out, .overlay-hours { width: 10% }
+.overlay-task { width: 70% }
+
+.task-overlay {
+  position: absolute;
+  visibility: hidden;
+  background-color: white;
+  border: 1px solid black;
+  margin-top: 1.6em;
+  padding: 0.5em;
+  width: 63%;
+}
+.task:hover {
+  background-color: #eee;
+}
+.task:hover .task-overlay {
+  visibility: visible;
+}
+
 .sunday-separator { height: 1em; }
 
 .label { width: 30%; text-align: right }

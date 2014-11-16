@@ -113,7 +113,6 @@ class Invoice
 
   class Day
     attr_reader :range, :event_ranges
-    attr_reader :first_in_week
 
     def initialize range, event_ranges
       @range = range    # time span of this day
