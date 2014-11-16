@@ -15,6 +15,7 @@ require 'pdfkit'
 require 'slim'
 require 'tilt'
 require 'nokogiri'
+require 'mail'
 
 
 def time_floor t,mins

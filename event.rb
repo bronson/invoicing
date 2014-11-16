@@ -1,3 +1,5 @@
+require 'mail'
+
 class Event
   attr_reader :date, :end, :duration, :comment, :hash, :to, :range, :src
   @@all = []
@@ -40,10 +42,15 @@ class Event
     range.span / 3600.0
   end
 
+  def to_addr
+    a = Mail::Address.new(to)
+    a.address
+  end
+
   def full_comment
     str = comment
     str += " (#{hash})" if hash
-    str += " (#{to})" if to
+    str += " (to: #{to_addr})" if to
     str
   end
 end

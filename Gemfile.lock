@@ -35,7 +35,10 @@ GEM
       rb-fsevent (>= 0.9.3)
       rb-inotify (>= 0.9)
     lumberjack (1.0.9)
+    mail (2.6.3)
+      mime-types (>= 1.16, < 3)
     method_source (0.8.2)
+    mime-types (2.4.3)
     mini_portile (0.6.1)
     nokogiri (1.6.4.1)
       mini_portile (~> 0.6.0)
@@ -64,6 +67,7 @@ DEPENDENCIES
   byebug
   guard-bundler
   guard-shell
+  mail
   nokogiri
   pdfkit
   slim
