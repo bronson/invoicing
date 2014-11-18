@@ -48,6 +48,7 @@ body {
   white-space: nowrap;
   font-size: 15pt;
   font-family: "Helvetica Narrow","Arial Narrow";
+  overflow: hidden;
 }
 
 .overlay-in, .overlay-out, .overlay-hours { width: 10% }
