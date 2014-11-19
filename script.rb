@@ -94,10 +94,8 @@ end
 
 
 def render_invoices invoices
-  stylesheets = %w[
-    pocketgrid.css
-    styles.css
-  ]
+  stylesheet = File.read('pocketgrid.css')
+  stylesheet += File.read('styles.css')
 
   template = Tilt.new('invoice.slim')
 
@@ -109,7 +107,7 @@ def render_invoices invoices
       content = File.read("#{invoice.title}.html")
     end
 
-    html = template.render(invoice, stylesheets: stylesheets)
+    html = template.render(invoice, stylesheet: stylesheet)
 
     # pretty-print the html
     html = Nokogiri::XML(html, &:noblanks).to_xhtml(indent: 3)
@@ -120,7 +118,6 @@ def render_invoices invoices
 
       # apparently wkhtmltopdf does try to support page-break-inside: avoid
       kit = PDFKit.new(html, page_size: 'Letter', title: invoice.title)
-      kit.stylesheets.concat(stylesheets)
       kit.to_file("#{invoice.title}.pdf")
     end
   end
