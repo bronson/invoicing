@@ -122,7 +122,7 @@ def render_invoices invoices
       File.write("#{invoice.title}.html", html)
 
       # apparently wkhtmltopdf does try to support page-break-inside: avoid
-      kit = PDFKit.new(html, page_size: 'Letter', title: invoice.title)
+      kit = PDFKit.new(html, page_size: 'Letter', title: invoice.title, margin_top: '0.5in', margin_bottom: '0.0in')
       kit.to_file("#{invoice.title}.pdf")
     end
   end
