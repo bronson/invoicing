@@ -41,11 +41,16 @@ def timeparse time
 
   if !tt
     if $base_time
-      # base_time has been set so try parsing a relative time
-      # todo: I should be a lot stricter about parsing invalid times
-      tt = Time.parse(time, $base_time)   # try a relative time
-      tt += 86400 if $base_time && $base_time > tt  # if base_time is 11:30 and tt is 00:00, tt needs to be bumped to the following day
-      tt = Time.new(tt.year+1, tt.month, tt.day, tt.hour, tt.min, tt.sec, tt.utc_offset) if $base_time && $base_time > tt
+      begin
+        # base_time has been set so try parsing a relative time
+        # todo: I should be a lot stricter about parsing invalid times
+        tt = Time.parse(time, $base_time)   # try a relative time
+        tt += 86400 if $base_time && $base_time > tt  # if base_time is 11:30 and tt is 00:00, tt needs to be bumped to the following day
+        tt = Time.new(tt.year+1, tt.month, tt.day, tt.hour, tt.min, tt.sec, tt.utc_offset) if $base_time && $base_time > tt
+      rescue
+        $stderr.puts "Time could not be parsed: '#{time}'"
+        raise
+      end
     else
       raise "the first time in the file must be rfc or iso: #{time}"
     end
@@ -139,26 +144,31 @@ end
 
 Dir['*.hours'].each do |file|
   $base_time = nil
-  File.open(file).each do |line|
-    line = line.sub(/#.*$/, '')   # strip comments
-    next if line =~ /^\s*$/       # blank lines
+  File.open(file).each.with_index do |line, lineno|
+    begin
+      line = line.sub(/#.*$/, '')   # strip comments
+      next if line =~ /^\s*$/       # blank lines
 
-    unless $base_time
-      $base_time = timeparse(line)
-      next
+      unless $base_time
+        $base_time = timeparse(line)
+        next
+      end
+
+      # todo: should probably choose a line format that more clearly identifies errors
+      m = line.match(/^\s*([^-]+)-(.*):([^0-9].*)$/)
+      raise "can't match line: #{line}" unless m
+
+      obj = {
+        'date' => timeparse(m[1]),
+        'end' => timeparse(m[2]),
+        'comment' => m[3].strip
+      }
+
+      Event.new(obj)
+    rescue
+      $stderr.puts "Error in #{file}:#{lineno}"
+      raise
     end
-
-    # todo: should probably choose a line format that more clearly identifies errors
-    m = line.match(/^\s*([^-]+)-(.*):([^0-9].*)$/)
-    raise "can't match line: #{line}" unless m
-
-    obj = {
-      'date' => timeparse(m[1]),
-      'end' => timeparse(m[2]),
-      'comment' => m[3].strip
-    }
-
-    Event.new(obj)
   end
 end
 
@@ -293,7 +303,7 @@ File.foreach("TOTALS").with_index do |line,i|
 end
 
 count = ranges.reduce(0) { |v,o| v += o.events.size }
-puts "\nYou have #{count} uncovered events!" unless count == 0
+puts "\nYou have #{count} uncovered events:\n    #{ranges.join("\n    ")}" unless count == 0
 
 # make sure invoice numbers don't conflict
 invoices.each.with_object({}) { |a,h|

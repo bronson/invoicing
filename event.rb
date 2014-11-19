@@ -53,6 +53,10 @@ class Event
     str += " (to: #{to_addr})" if to
     str
   end
+
+  def to_s
+    "#{range.to_s}-#{hash || comment}"
+  end
 end
 
 
@@ -81,6 +85,10 @@ class EventRange
 
   def hours
     range.span / 3600.0
+  end
+
+  def to_s
+    "#{range.to_s}: #{events.map(&:to_s)}"
   end
 
   # returns the comment for the longest duration task in the range

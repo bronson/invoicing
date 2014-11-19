@@ -87,6 +87,13 @@ class Invoice
     result.shift while result.first.empty?
     result.pop while result.last.empty?
     result.reject! { |d| d.empty? && (d.date.saturday? || d.date.sunday?) }
+
+    # empty days at the end of the week can be deleted
+    result.group_by { |d| d.date.strftime("%U").to_i }.each do |weekno,d|
+      result.delete(d.pop) while d[-1] && d[-1].empty? && d[-2] && d[-2].empty?
+      result.delete(d.pop) if d.size == 1 && d[-1] && d[-1].empty?
+    end
+
     result
   end
 
