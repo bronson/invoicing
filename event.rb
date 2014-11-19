@@ -115,8 +115,8 @@ class EventRange
   def self.merge_events
     prev = nil
     Event.all.each do |event|
-      if prev && prev.range.end >= event.range.begin - 3600
-        # if events are separated by an hour or less, merge them
+      separation = 1800 # if events are separated by this many seconds or less, merge them
+      if prev && prev.range.end >= event.range.begin - separation
         prev.add(event)
       else
         # otherwise start a new range
