@@ -51,8 +51,8 @@ body {
   overflow: hidden;
 }
 
-.overlay-in, .overlay-out, .overlay-hours { width: 10% }
-.overlay-task { width: 70% }
+.overlay-in, .overlay-out { width: 10% }
+.overlay-task { width: 80% }
 
 .task-overlay {
   position: absolute;

@@ -51,7 +51,6 @@ html
                     - range.events.each do |event|
                         .block.overlay-in=    timefmt event.range.begin
                         .block.overlay-out=   timefmt event.range.end
-                        .block.overlay-hours= event.hours
                         .block.overlay-task=  event.full_comment
                   .task-summary
                     = range.tasks(90)
