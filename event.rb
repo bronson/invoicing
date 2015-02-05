@@ -103,9 +103,8 @@ class EventRange
       result << events_by_duration.pop.comment
     end
 
-    result << "+#{events.count-1}" if events.count > 1
-
-    result.join(", ")
+    addl = events.count-1 if events.count > 1
+    [result.join(", "), addl]
   end
 
   def self.all

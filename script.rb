@@ -115,14 +115,18 @@ def render_invoices invoices
     html = template.render(invoice, stylesheet: stylesheet)
 
     # pretty-print the html
-    html = Nokogiri::XML(html, &:noblanks).to_xhtml(indent: 3)
+    nodes = Nokogiri::XML(html, &:noblanks)
+    html = nodes.to_xhtml(indent: 3)
 
     if content != html
       $stderr.puts "Writing #{invoice.title}"
       File.write("#{invoice.title}.html", html)
 
+      # don't show the "+1" additional task indicators in the pdf
+      nodes.css('.task-additional').remove
+
       # apparently wkhtmltopdf does try to support page-break-inside: avoid
-      kit = PDFKit.new(html, page_size: 'Letter', title: invoice.title, margin_top: '0.5in', margin_bottom: '0.0in')
+      kit = PDFKit.new(nodes.to_xhtml, page_size: 'Letter', title: invoice.title, margin_top: '0.5in', margin_bottom: '0.0in')
       kit.to_file("#{invoice.title}.pdf")
     end
   end

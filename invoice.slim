@@ -53,7 +53,10 @@ html
                         .block.overlay-out=   timefmt event.range.end
                         .block.overlay-task=  event.full_comment
                   .task-summary
-                    = range.tasks(90)
+                    - tasks,addl = range.tasks(90)
+                    = tasks
+                    - if addl
+                      span.task-additional= ", +#{addl}"
             - else
               .block.dow=    day.date.strftime("%a")
               .block.day=    day.date.strftime("%b %d")
