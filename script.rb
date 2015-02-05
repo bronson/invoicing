@@ -319,8 +319,10 @@ invoices.reduce { |a,b|
 # make sure the total dollar amount matches for each invoice
 invoices.each do |invoice|
   if !invoice.invoice_amount.nil? && invoice.computed_amount != invoice.invoice_amount
-    raise "Invoice #{invoice.invoice_number}: computed amount #{invoice.computed_amount.inspect} " +
-      "doesn't equal invoiced amount #{invoice.invoice_amount}"
+    unless invoice.has_known_errors?
+      raise "Invoice #{invoice.invoice_number}: computed amount #{invoice.computed_amount.inspect} " +
+        "doesn't equal invoiced amount #{invoice.invoice_amount}"
+    end
   end
 end
 

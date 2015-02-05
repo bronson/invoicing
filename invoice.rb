@@ -37,6 +37,10 @@ class Invoice
     @@base_time = old_base
   end
 
+  def has_known_errors?
+    invoice_number.end_with?('!')
+  end
+
   def compute_ranges ranges
     @event_ranges = ranges
     compute_days
@@ -106,7 +110,7 @@ class Invoice
   end
 
   def title
-    "Invoice #{invoice_number}"
+    "Invoice #{invoice_number.sub(/!$/, '')}"
   end
 
   def datefmt date
