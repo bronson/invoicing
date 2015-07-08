@@ -10,7 +10,6 @@ require_relative 'invoice'
 
 # to generate html and pdfs
 require 'bundler/setup'
-require 'wkhtmltopdf/heroku'
 require 'pdfkit'
 require 'slim'
 require 'tilt'
