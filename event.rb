@@ -123,6 +123,7 @@ class EventRange
         @@all << prev
       end
     end
+    @@all.sort_by! { |e| e.range.begin }
   end
 
   # used to distribute event ranges into time ranges.

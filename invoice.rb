@@ -28,7 +28,7 @@ class Invoice
     beg_time = Time.new(start_date.year, start_date.month, start_date.day,
                         0, 0, 0, start_date.utc_offset)
     end_time = Time.new(end_date.year, end_date.month, end_date.day,
-                        0, 0, 0, start_date.utc_offset)
+                        0, 0, 0, end_date.utc_offset)
     @range = beg_time...(end_time + 86400)
 
     # reset base_time back to start_date.  otherwise it might be the cleared date,
@@ -50,9 +50,15 @@ class Invoice
     return nil if str.nil? || str.empty? || str =~ /^#/
 
     if @@base_time
+      raw_date = Time.parse(str)
       date = Time.parse(str, @@base_time)
+
+      # now convert the date back to its native time zone.
+      # (if @@base_time is on the opposite side of a daylight savings switch from date, then date will not have the correct offset)
+      date = Time.new(date.year, date.month, date.day, date.hour, date.min, date.sec, raw_date.utc_offset)
+
       date += 86400 if @@base_time && @@base_time > date  # if base_time is 11:30 and tt is 00:00, tt needs to be bumped to the following day
-      # if base_time is Dec 20 and date is Jan 4, then we know it needs to be January of the following year
+      # if base_time is Dec 20 and date is Jan 4, then we know it needs to be January of the following year (could probably use parse's block form to do this)
       date = Time.new(date.year+1, date.month, date.day, date.hour, date.min, date.sec, date.utc_offset) if @@base_time && @@base_time > date
     else
       raise 'First date must include full year' unless str =~ /\d\d\d\d/
@@ -147,4 +153,3 @@ class Invoice
     end
   end
 end
-

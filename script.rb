@@ -332,5 +332,3 @@ end
 # make sure each cleared check matches its invoice totals & is consistent
 check_cleared_checks(invoices)
 render_invoices(invoices)
-
-
