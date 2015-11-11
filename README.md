@@ -24,7 +24,6 @@ The invoice.slim template decides what your invoice will look like.
 
   - cd into the git repo
   - run the ~/invoices/collect script
-  - copy the resulting JSON file into this folder.
 
 ### To collect data from email:
   - Just drop .mbox files into the folder.
