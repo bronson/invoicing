@@ -210,7 +210,7 @@ Dir['*.mbox'].each do |name|
 end
 
 
-Event.sort
+Event.all.sort!
 
 puts "EVENTS:"
 Event.all.each { |r| puts "#{r.range}:#{"%8s " % (r.hash || (r.to && r.to[0..7]))} #{r.comment}" }

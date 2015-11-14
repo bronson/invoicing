@@ -4,6 +4,11 @@ class Event
   attr_reader :date, :end, :duration, :comment, :hash, :to, :range, :src
   @@all = []
 
+  include Comparable
+  def <=>(other)
+    [date, hash||'', comment] <=> [other.date, other.hash||'', other.comment]
+  end
+
   def initialize args
     @date = args.delete('date')
     @end = args.delete('end')
@@ -28,10 +33,6 @@ class Event
       # magic value -- assume task duration of 30 minutes
       @range = date...(date + 30*60);
     end
-  end
-
-  def self.sort
-    @@all.sort_by! { |r| r.range.min }
   end
 
   def self.all

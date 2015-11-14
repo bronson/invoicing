@@ -48,7 +48,7 @@ html
                 .block.hours= range.hours
                 .block.task
                   .block-group.task-overlay
-                    - range.events.each do |event|
+                    - range.events.sort.each do |event|
                         .block.overlay-in=    timefmt event.range.begin
                         .block.overlay-out=   timefmt event.range.end
                         .block.overlay-task=  event.full_comment
