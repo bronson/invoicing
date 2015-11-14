@@ -158,7 +158,7 @@ Dir['*.hours'].each do |file|
       end
 
       # todo: should probably choose a line format that more clearly identifies errors
-      m = line.match(/^\s*([^-]+)-(.*):([^0-9].*)$/)
+      m = line.match(/^\s*([^-]+)-(.*?):([^0-9].*)$/)
       raise "can't match line: #{line}" unless m
 
       obj = {
