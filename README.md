@@ -1,4 +1,4 @@
-# Invoices
+# Invoicing
 
 For the code monkey who wants to address the crushing tedium of invoicing
 with the rigid hopelessness of a 70s-era batch processing system.
