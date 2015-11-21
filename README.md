@@ -58,3 +58,22 @@ When writing your own data parser, this is the information you can supply:
 * comment: reminder of what you did or git commit message
 * src: where a particular item came from
 
+
+# History of nsame
+
+These scripts started life in 2012 when I was generating timesheets with
+a spreadsheet.  So, there I was, months into a contract without having
+recorded my hours...  (on day five, I could work on catching up on my invoices, or I could work
+on far more interesting stuff and deal with it on day 6, repeat for 50 days).
+
+In a semi-panic, I whipped up some quick scripts to crunch data from
+git commits, emails sent, and ad hoc notes dropped in random repos, and
+show as best it could what I had done on that day.  It was originally named "NSA Me".
+
+Things then started growing really poorly.  I got tired of copying from tables of
+\t-formatted numbers, so I added CSV output.  Then HTML output.  Then,
+why not format the HTML so it kind of paginates?  Eventually this clumsy
+invoicing batch system started to be recognizable.
+
+Yesterday, some friends asked how I invoice while freelancing.  Well, this
+is how.  Now it's on github.  May you all suffer.
