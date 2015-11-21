@@ -1,8 +1,24 @@
+# Invoices
+
+For the code monkey who wants to address the crushing tedium of invoicing
+with the rigid hopelessness of a 70s-era batch processing system.
+
+
 # Invoicing Sucks
 
 Don't do it.
 
-## Usage
+
+# Overview
+
+- Clone this repo
+- Change the config file to match your needs
+- Collect some commit info.  Write some .hours files.
+- Run `./run`.  Your invoices will appear.
+- Change the .slim templates until your invoices look nice.
+- Run `./run-pdf` to produce PDFs suitable for the suits.
+
+
 
 First you drop a bunch of files with data in this folder.  The files can be:
 
