@@ -1,12 +1,14 @@
 #!/usr/bin/env ruby
 
+$: << './lib'
+
 require 'JSON'
 require 'time'
 require 'yaml'
 
-require_relative 'range_fixes'
-require_relative 'event'
-require_relative 'invoice'
+require 'range_fixes'
+require 'event'
+require 'invoice'
 
 # to generate html and pdfs
 require 'bundler/setup'

@@ -16,7 +16,7 @@ class Range
 
   # Like Range#size but doesn't discriminate against non-Numerics (like Dates)
   def span
-    self.end - self.begin
+    self.end >= self.begin ? self.end - self.begin : 0
   end
 end
 
