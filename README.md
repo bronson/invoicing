@@ -4,9 +4,9 @@ For the code monkey who wants to address the crushing tedium of invoicing
 with the rigid hopelessness of a 70s-era batch processing system.
 
 
-# Invoicing Sucks
+# Warning
 
-Don't do it.
+I wouldn't bother trying to figure this out until there are some examples.
 
 
 # Overview
@@ -59,21 +59,23 @@ When writing your own data parser, this is the information you can supply:
 * src: where a particular item came from
 
 
-# History of nsame
+# License
 
-These scripts started life in 2012 when I was generating timesheets with
-a spreadsheet.  So, there I was, months into a contract without having
-recorded my hours...  (on day five, I could work on catching up on my invoices, or I could work
-on far more interesting stuff and deal with it on day 6, repeat for 50 days).
+MIT for great freedom.
 
-In a semi-panic, I whipped up some quick scripts to crunch data from
-git commits, emails sent, and ad hoc notes dropped in random repos, and
-show as best it could what I had done on that day.  It was originally named "NSA Me".
 
-Things then started growing really poorly.  I got tired of copying from tables of
-\t-formatted numbers, so I added CSV output.  Then HTML output.  Then,
-why not format the HTML so it kind of paginates?  Eventually this clumsy
+# History
+
+So there I was, months into a contract without having recorded any hours.
+I had notes scribbled, emails sent, and commits committed, but it was going to
+take days to assemble all this into an invoice.  In an calm panic, I whipped
+up some scripts to crunch it down and produce a calendar of what I had
+done and when.  It somewhat worked so I named it "NSA Me".
+
+Then things then started growing really poorly.  I got tired of copying from
+tables of \t-formatted numbers, so I added CSV output.  Then HTML output.
+Then I formatted the HTML so it kind of paginates...  Eventually a clumsy
 invoicing batch system started to be recognizable.
 
 Yesterday, some friends asked how I invoice while freelancing.  Well, this
-is how.  Now it's on github.  May you all suffer.
+is how.  And now it's on github.  May you all suffer.
