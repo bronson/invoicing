@@ -86,7 +86,7 @@ class Invoice
   def compute_days
     @days ||= begin
       day_array.map do |today|
-        day_events,* = EventRange.partition(event_ranges, today)
+        day_events,* = TimeRange.partition(event_ranges, today)
         Day.new(today, day_events)
       end
     end

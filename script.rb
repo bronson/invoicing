@@ -7,7 +7,7 @@ require 'time'
 require 'yaml'
 
 require 'range_fixes'
-require 'event'
+require 'time_range'
 require 'invoice'
 
 # to generate html and pdfs
@@ -217,17 +217,17 @@ Event.all.sort!
 puts "EVENTS:"
 Event.all.each { |r| puts "#{r.range}:#{"%8s " % (r.hash || (r.to && r.to[0..7]))} #{r.comment}" }
 
-EventRange.merge_events
+TimeRange.merge_events
 
 puts "\nRANGES:"
-EventRange.all.each { |r|
+TimeRange.all.each { |r|
   puts "#{r.begin.strftime '%a'} #{r.begin.strftime '%m-%d'}: #{r.begin.strftime '%H:%M'}-#{r.end.strftime '%H:%M'} #{(r.end - r.begin) / 3600}" +
     "#{ '+' if r.begin.day != r.end.day }#{ ' !' if r.end - r.begin > 8*60*60 }"
 }
 
 puts
-total = EventRange.all.reduce(0) { |a,v| a += (v.end - v.begin).round }
-puts "total results=#{Event.all.count}, time blocks=#{EventRange.all.count}, hours=#{total/3600.0}"
+total = TimeRange.all.reduce(0) { |a,v| a += (v.end - v.begin).round }
+puts "total results=#{Event.all.count}, time blocks=#{TimeRange.all.count}, hours=#{total/3600.0}"
 
 
 
@@ -246,7 +246,7 @@ iterate_days seq_start, seq_end do |lo,hi|
     print "\n%10s  " % "#{lo.day} #{lo.strftime('%b')}"
   end
 
-  today = EventRange.all.reduce(0) { |a,v|
+  today = TimeRange.all.reduce(0) { |a,v|
     n = range & v
     a += n.end - n.begin
   }
@@ -271,7 +271,7 @@ File.open("out.csv", 'w') do |file|
 
     dow = lo.strftime '%a'
     date = lo.strftime '%m-%d'
-    EventRange.all.each do |r|
+    TimeRange.all.each do |r|
       beg = [r.begin, lo].max
       time = beg.strftime '%H:%M'
       dur = ([r.end, hi].min - [r.begin, lo].max) / 3600
@@ -291,7 +291,7 @@ end
 
 
 invoices = []
-ranges = EventRange.all.dup
+ranges = TimeRange.all.dup
 current_rate = nil
 
 File.foreach("TOTALS").with_index do |line,i|
@@ -301,7 +301,7 @@ File.foreach("TOTALS").with_index do |line,i|
   next unless fields.first =~ /^0*[1-9]/  # skip this line if it doesn't look like an invoice number
 
   invoice = Invoice.new(fields,i,current_rate)
-  ranges_for_invoice,ranges = EventRange.partition(ranges, invoice.range)
+  ranges_for_invoice,ranges = TimeRange.partition(ranges, invoice.range)
 
   invoice.compute_ranges(ranges_for_invoice)
   invoices << invoice
