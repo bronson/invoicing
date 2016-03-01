@@ -1,15 +1,16 @@
 #!/bin/sh
 
 # Note this requires Perl 5.14 or later.
-# todo: merge this as a function into the collect script
+# TODO: merge this as a function into the collect script
+# TODO: looks like we're not escaping backslashes in comments?
 
 author=brons
 since=3-3-2014
 
 echo '['
-# pipe through sed to escape double quotes in commets, wish git could do this on its own
+# pipe through perl to escape double quotes in commets, wish git could do this on its own
 # (strange that perl won't accept ($1 =~ s/"\\"/rg), apparently I have to wrap it with a function rp($1)
-git --no-pager log --all --full-history --author="$author" --since="$since" --date=iso \
+git --no-pager log --all --full-history --author="$author" --since="$since" --date=iso --abbrev=12 \
     --format='{"date":"%ad", "hash":"%h", "comment":"%s"},' | sort |
     perl -pe 'use 5.013002; sub rp { shift =~ s/"/\\"/rg } s/"comment":"(.*)"},$/"\"comment\":\"" . rp($1) . "\"},"/e'
 echo '{}' # because trailing comma is invalid json

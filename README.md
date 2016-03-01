@@ -66,9 +66,9 @@ MIT for great freedom.
 
 # History
 
-So there I was, months into a contract without having recorded any hours.
+So there I was, months into a contract without having recorded any hours...
 I had notes scribbled, emails sent, and commits committed, but it was going to
-take days to assemble all this into an invoice.  In an calm panic, I whipped
+take days to assemble all this into an invoice.  In a relaxed panic, I whipped
 up some scripts to crunch it down and produce a calendar of what I had
 done and when.  It somewhat worked so I named it "NSA Me".
 
