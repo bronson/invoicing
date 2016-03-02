@@ -19,6 +19,10 @@ require 'nokogiri'
 require 'mail'
 
 
+def log msg
+  puts msg if ENV.has_key? 'DEBUG'
+end
+
 def time_floor t,mins
   Time.at(t.to_i/(mins*60)*(mins*60))
 end
@@ -45,9 +49,17 @@ def timeparse time
       begin
         # base_time has been set so try parsing a relative time
         # todo: I should be a lot stricter about parsing invalid times
+
+        # work with "Jan 7" as well as "7 Jan"
+        if time[/^\s*([A-Za-z]+\s*[0-9]+):/]   # split "Jan 7: " off front and use it as base time
+          $base_time = Time.parse($1, $base_time)
+          time = $'
+        end
+
         tt = Time.parse(time, $base_time)   # try a relative time
         tt += 86400 if $base_time && $base_time > tt  # if base_time is 11:30 and tt is 00:00, tt needs to be bumped to the following day
         tt = Time.new(tt.year+1, tt.month, tt.day, tt.hour, tt.min, tt.sec, tt.utc_offset) if $base_time && $base_time > tt
+        log "parsing #{time} against #{$base_time} and got #{tt}"
       rescue
         $stderr.puts "Time could not be parsed: '#{time}'"
         raise
@@ -135,6 +147,7 @@ end
 
 
 Dir['*.json'].each do |file|
+  log "reading #{file}"
   $base_time = nil
   json = JSON.parse File.read(file)
   json.reject! { |x| x == {} }
@@ -148,6 +161,7 @@ end
 
 
 Dir['*.hours'].each do |file|
+  log "reading #{file}"
   $base_time = nil
   File.open(file).each.with_index do |line, lineno|
     begin
