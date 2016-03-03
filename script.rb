@@ -193,7 +193,7 @@ end
 
 
 seq_start = Time.parse('16-03-2014')
-seq_end = Time.parse('23-08-2014')
+seq_end = Time.parse('01-03-2016')
 
 Dir['*.mbox'].each do |name|
   File.open(name) do |file|
@@ -257,7 +257,7 @@ iterate_days seq_start, seq_end do |lo,hi|
   if lo.wday == 0
     print "%10d" % (total/3600) if total
     total = 0
-    print "\n%10s  " % "#{lo.day} #{lo.strftime('%b')}"
+    print "\n%12s  " % "#{lo.day} #{lo.strftime('%b %y')}"
   end
 
   today = TimeRange.all.reduce(0) { |a,v|
