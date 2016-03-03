@@ -4,6 +4,7 @@ $: << './lib'
 
 require 'JSON'
 require 'time'
+require 'date'
 require 'yaml'
 
 require 'range_fixes'
@@ -52,13 +53,15 @@ def timeparse time
 
         # work with "Jan 7" as well as "7 Jan"
         if time[/^\s*([A-Za-z]+\s*[0-9]+):/]   # split "Jan 7: " off front and use it as base time
-          $base_time = Time.parse($1, $base_time)
+          nt = Time.parse($1, $base_time)
+          nt = Time.new(nt.year+1, nt.month, nt.day, nt.hour, nt.min, nt.sec, nt.utc_offset) if $base_time.to_date.to_time > nt
           time = $'
+          $base_time = nt
         end
 
         tt = Time.parse(time, $base_time)   # try a relative time
-        tt += 86400 if $base_time && $base_time > tt  # if base_time is 11:30 and tt is 00:00, tt needs to be bumped to the following day
-        tt = Time.new(tt.year+1, tt.month, tt.day, tt.hour, tt.min, tt.sec, tt.utc_offset) if $base_time && $base_time > tt
+        tt += 86400 if $base_time > tt  # if base_time is 11:30 and tt is 00:00, tt needs to be bumped to the following day
+        tt = Time.new(tt.year+1, tt.month, tt.day, tt.hour, tt.min, tt.sec, tt.utc_offset) if $base_time > tt
         log "parsing #{time} against #{$base_time} and got #{tt}"
       rescue
         $stderr.puts "Time could not be parsed: '#{time}'"
