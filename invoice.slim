@@ -12,7 +12,7 @@ html
       .metadata.block
         .invoice= title
         .date=    datefmt submit_date
-        .full-range= days.first.range.begin.strftime("%b %d") + ' - ' + days[-2].range.end.strftime("%b %d")
+        .full-range= days.first.range.begin.strftime("%b %e") + ' - ' + days[-2].range.end.strftime("%b %e, %Y")
 
       .sender.block
         .name     AUTHOR
