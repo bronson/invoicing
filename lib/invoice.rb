@@ -22,8 +22,8 @@ class Invoice
     @line_number    = lineno
     @hourly_rate    = rate
 
-    raise "No start date in #{invoice_number}" if start_date.nil?
-    raise "No end date in #{invoice_number} #{self.inspect} #{start_date}" if end_date.nil?
+    raise "No start date in invoice <<#{invoice_number}>>" if start_date.nil?
+    raise "No end date in invoice <<#{invoice_number}>> on #{start_date}" if end_date.nil?
 
     beg_time = Time.new(start_date.year, start_date.month, start_date.day,
                         0, 0, 0, start_date.utc_offset)
