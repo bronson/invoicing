@@ -68,14 +68,15 @@ MIT for great freedom.
 
 So there I was, months into a contract without having recorded any hours...
 I had notes scribbled, emails sent, and commits committed, but it was going to
-take days to assemble all this into an invoice.  In a relaxed panic, I whipped
-up some scripts to crunch it down and produce a calendar of what I had
-done and when.  It somewhat worked so I named it "NSA Me".
+take days to assemble all this into an invoice.  I whipped
+up some scripts to crunch the data down and produce a calendar of what I had
+done and when.  It worked, and reconciled the metadata trail I had left
+behind, so it was called "NSA Me".
 
-Then things then started growing really poorly.  I got tired of copying from
-tables of \t-formatted numbers, so I added CSV output.  Then HTML output.
-Then I formatted the HTML so it kind of paginates...  Eventually a clumsy
-invoicing batch system started to be recognizable.
+Then things then started growing poorly.  I got tired of copying from
+tables of \t-formatted numbers so I added CSV output.  Then HTML output.
+Then I formatted the HTML so it kind of paginates.  A clumsy
+invoicing batch system started to become recognizable.
 
 Yesterday, some friends asked how I invoice while freelancing.  Well, this
 is how.  And now it's on github.  May you all suffer.
