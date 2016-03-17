@@ -195,8 +195,7 @@ Dir['*.hours'].each do |file|
 end
 
 
-seq_start = Time.parse('16-03-2014')
-seq_end = Time.parse('01-03-2016')
+mail_start = Time.parse('16-03-2014')
 
 Dir['*.mbox'].each do |name|
   File.open(name) do |file|
@@ -212,7 +211,7 @@ Dir['*.mbox'].each do |name|
       raise "wanted Date: not #{line}" unless line =~ /^Date: (.*)$/
       date = time_floor(Time.parse($1), 30)
 
-      next unless date >= seq_start
+      next unless date >= mail_start
 
       line = file.gets
       raise "wanted To: not #{line}" unless line =~ /^To: (.*)$/ || line =~ /^Cc: (.*)$/
@@ -230,8 +229,14 @@ end
 
 
 Event.all.sort!
+seq_start = Event.all.first.range.begin
+seq_start -= 86400 * seq_start.wday    # bump backward to previous Sunday
+seq_start -= 3600*seq_start.hour + 60*seq_start.min + seq_start.sec   # start of day
+seq_end = Event.all.last.range.end
+seq_end += 86400*(6 - seq_end.wday)  # bump forward to upcoming Saturday
+seq_end += 3600*(23-seq_end.hour) + 60*(59-seq_end.min) + 59-seq_end.sec # end of day
 
-puts "EVENTS:"
+puts "EVENTS:   #{seq_start} .. #{seq_end}"
 Event.all.each { |r| puts "#{r.range}:#{"%8s " % (r.hash || (r.to && r.to[0..7]))} #{r.comment}" }
 
 TimeRange.merge_events
