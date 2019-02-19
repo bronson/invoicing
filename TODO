@@ -1,0 +1,34 @@
+ABANDONED! See the README.
+
+
+Need a single config file:
+  granularity: 30.minutes
+
+  propertysearch:
+    repo: $HOME/propertysearch
+    git-author=brons
+    since=3-3-2014
+
+Add some tests for Event
+
+Main command should generate all text and html files.
+It should require --pdf or pdf to generate the PDFs.
+  PDFs won't be overwritten once they exist.
+
+
+Make collectors pluggable.  Rewrite these collectors to match.
+
+
+Have the git collector read all branches.
+
+
+
+
+
+Tell it all the repos that it should pull commits from
+
+Write some testing
+
+Make it fail if it finds commits outside my described hours
+
+Hide the durations in the popup menu

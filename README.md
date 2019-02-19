@@ -9,6 +9,11 @@ with the rigid hopelessness of a 70s-era batch processing system.
 I wouldn't bother trying to figure this out until there are some examples.
 
 
+# Abandoned
+
+And, until I start freelancing again, this repo won't see any activity.
+
+
 # Overview
 
 - Clone this repo
